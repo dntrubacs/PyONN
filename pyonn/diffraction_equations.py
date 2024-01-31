@@ -117,7 +117,8 @@ def find_intensity_map(optical_modes: torch.tensor) -> torch.tensor:
     return intensity_map
 
 
-def find_phase_change(refractive_index: torch.Tensor, thickness: float,
+def find_phase_change(n_1: torch.Tensor, n_2: float,
+                      thickness: float,
                       wavelength: float) -> torch.Tensor:
     """ Finds the phase change of light passing through a material from
     air.
@@ -127,8 +128,10 @@ def find_phase_change(refractive_index: torch.Tensor, thickness: float,
     of light.
 
     Args:
-        refractive_index: Refractive index of the material. Can be a
+        n_1: Refractive index of the material. Can be a
             scalar or a matrix containing multiple entries.
+        n_2: Refractive index of the material from which the light is coming
+            (must be constant)
         thickness: Thickness of the material (measured in meters).
         wavelength: Wavelength of light passing though the material (measured
             in meters).
@@ -139,9 +142,9 @@ def find_phase_change(refractive_index: torch.Tensor, thickness: float,
     # squeeze the
     # find out the phase change
     phase_change = (2 * torch.pi / wavelength) * (
-                refractive_index - 1) * thickness
+                n_1 - n_2) * thickness
 
-    # get the phase change between o and 2pi
+    # get the phase change between 0 and 2pi
     phase_change = phase_change % (2*torch.pi)
 
     return phase_change
@@ -151,7 +154,8 @@ if __name__ == '__main__':
     debug_refractive_indices = torch.tensor([[3.28536, 4.0493, 3.28536],
                                              [3.28536, 4.0493, 3.28536]],
                                             device=device)
-    debug_phase = find_phase_change(refractive_index=debug_refractive_indices,
+    debug_phase = find_phase_change(n_1=debug_refractive_indices,
+                                    n_2=1,
                                     thickness=1E-6,
                                     wavelength=1.55E-6)
     print(debug_phase)
