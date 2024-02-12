@@ -25,13 +25,13 @@ def find_coordinate_matrix(n_size: int, n_length: float,
     matrix = np.zeros(shape=(n_size, n_size, 3))
 
     # length of one pixel (or physical element of the matrix)
-    pixel_length = n_length/n_size
+    pixel_length = n_length / n_size
 
     # go through each element in the matrix and assign its value
     for i in range(n_size):
         for j in range(n_size):
-            matrix[i][j] = np.array([pixel_length*(i+0.5),
-                                     pixel_length*(j+0.5),
+            matrix[i][j] = np.array([pixel_length * (i + 0.5),
+                                     pixel_length * (j + 0.5),
                                      z_coordinate])
 
     return matrix
@@ -40,7 +40,7 @@ def find_coordinate_matrix(n_size: int, n_length: float,
 def create_square_grid_pattern(center_coordinates: np.ndarray,
                                pixel_length: float, pixel_number: int,
                                pixel_separation: float,
-                               grid_z_coordinate: float) -> np.ndarray:
+                               grid_z_coordinate: float) -> tuple:
     """ Finds the coordinates of all pixels from a square grid.
 
     Each feature of the grid (cna be square, circle, etc.) will be placed in
@@ -62,9 +62,13 @@ def create_square_grid_pattern(center_coordinates: np.ndarray,
         grid_z_coordinate: The z coordinate of all pixels.
 
     Returns:
-        Numpy array containing the coordinates of elements
-        (pixel_number, pixel_numbers, 3)
-        where the last entry represents the coordinates (x, y, z).
+        Tuple containing:
+            -Numpy array containing the coordinates of elements
+            (pixel_number, pixel_numbers, 3)
+            where the last entry represents the coordinates (x, y, z).
+            - Numpy array containing x-coordinates of all the pixels.
+            - Numpy array containing y-coordinates of all the pixels.
+            - Float representing the z coordinate of all the pixels.
     """
     # the matrix containing all coordinates
     pixel_matrix = np.zeros(shape=(pixel_number, pixel_number, 3))
@@ -75,8 +79,8 @@ def create_square_grid_pattern(center_coordinates: np.ndarray,
     # possible values for x and y
     # the center square will have center_coordinates for ood pixel number
     if pixel_number % 2 == 1:
-        x_coordinates = distance*np.arange(
-            start=-int(pixel_number/2), stop=int(pixel_number/2)+1,
+        x_coordinates = distance * np.arange(
+            start=-int(pixel_number / 2), stop=int(pixel_number / 2) + 1,
             step=1
         ) + center_coordinates[0]
         y_coordinates = distance * np.arange(
@@ -86,19 +90,18 @@ def create_square_grid_pattern(center_coordinates: np.ndarray,
 
     # center_coordinates will be between for ood pixel number
     else:
-        x_coordinates = distance*np.arange(
-            start=-pixel_number/2+0.5, stop=pixel_number/2+0.5,
+        x_coordinates = distance * np.arange(
+            start=-pixel_number / 2 + 0.5, stop=pixel_number / 2 + 0.5,
             step=1
         ) + center_coordinates[0]
-        y_coordinates = distance*np.arange(
-            start=-pixel_number/2+0.5, stop=pixel_number/2+0.5,
+        y_coordinates = distance * np.arange(
+            start=-pixel_number / 2 + 0.5, stop=pixel_number / 2 + 0.5,
             step=1
         ) + center_coordinates[1]
 
     # go through each pixel
     for i in range(len(x_coordinates)):
         for j in range(len(y_coordinates)):
-
             # set all z coordinates to grid_z_coordinates
             pixel_matrix[i][j][2] = grid_z_coordinate
 
@@ -107,7 +110,7 @@ def create_square_grid_pattern(center_coordinates: np.ndarray,
             pixel_matrix[i][j][1] = y_coordinates[j]
 
     # return the square grid pattern found
-    return pixel_matrix
+    return pixel_matrix, x_coordinates, y_coordinates, grid_z_coordinate
 
 
 def plot_square_grid_pattern(pattern: np.ndarray) -> None:
@@ -134,12 +137,32 @@ def plot_square_grid_pattern(pattern: np.ndarray) -> None:
     plt.show()
 
 
+def create_pattern_mesh_grid(x_coordinates: np.ndarray,
+                             y_coordinates: np.ndarray) -> tuple:
+    """ Create mesh grids from given coordinates for a square grid pattern.
+
+    Args:
+        x_coordinates: Numpy array representing the x-coordinates of the pixel
+            pattern.
+        y_coordinates: Numpy array representing the y-coordinates of the pixel
+            pattern.
+
+    Returns:
+        Tuple containing the y and x mesh grids.
+    """
+    # meshgrid for x and y
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
+
+    # return the tuple of mesh grids
+    return x_mesh, y_mesh
+
+
 if __name__ == '__main__':
     # used only for testing and debugging
     debug_matrix = create_square_grid_pattern(
         center_coordinates=np.array([0, 0]),
         pixel_length=0.8E-6,
         pixel_separation=0.2E-6,
-        pixel_number=5,
+        pixel_number=3,
         grid_z_coordinate=1E-6)
-    plot_square_grid_pattern(pattern=debug_matrix)
+    plot_square_grid_pattern(pattern=debug_matrix[0])
