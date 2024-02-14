@@ -147,6 +147,9 @@ def find_phase_change(n_1: torch.Tensor, n_2: float,
     # get the phase change between 0 and 2pi
     phase_change = phase_change % (2*torch.pi)
 
+    # transfer to [-pi, pi] interval
+    phase_change = phase_change - torch.pi
+
     return phase_change
 
 

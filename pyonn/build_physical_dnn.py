@@ -69,6 +69,7 @@ class PhysicalDiffractiveLayer:
             thickness=self.neuron_thickness,
             wavelength=self.wavelength
         )
+        print(phase_map)
         return phase_map
 
     def find_neuron_optical_modes(self) -> torch.Tensor:
