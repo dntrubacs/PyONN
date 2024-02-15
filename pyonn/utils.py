@@ -156,13 +156,35 @@ def create_pattern_mesh_grid(x_coordinates: np.ndarray,
     # return the tuple of mesh grids
     return x_mesh, y_mesh
 
+def circ_function(x: np.ndarray) -> np.ndarray:
+    """ Returns 1 for all values smaller than 1 and 0 otherwise.
+
+    Args:
+        x: Numpy array of general shape
+
+    Returns:
+        Numpy array containing elements of 1 and 0.
+
+    """
+    circ_result = np.where(x > 1, 0, x)
+
+    print(circ_result)
+
+    # divide by itself to get only values
+    circ_result = np.where(circ_result != 0, 1, circ_result)
+
+    # return the result
+    return circ_result
+
 
 if __name__ == '__main__':
+    debug_x = np.array([[0.2, 5], [0.3, 4]])
+    circ_function(debug_x)
     # used only for testing and debugging
-    debug_matrix = create_square_grid_pattern(
-        center_coordinates=np.array([0, 0]),
-        pixel_length=0.8E-6,
-        pixel_separation=0.2E-6,
-        pixel_number=3,
-        grid_z_coordinate=1E-6)
-    plot_square_grid_pattern(pattern=debug_matrix[0])
+    #debug_matrix = create_square_grid_pattern(
+       # center_coordinates=np.array([0, 0]),
+      #  pixel_length=0.8E-6,
+     ##   pixel_separation=0.2E-6,
+     #   pixel_number=3,
+     #   grid_z_coordinate=1E-6)
+   # plot_square_grid_pattern(pattern=debug_matrix[0])
