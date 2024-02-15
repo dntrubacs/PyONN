@@ -25,14 +25,15 @@ neural network used please check the following References:
 import torch
 
 # define device as a global variable to use the gpu if available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def find_optical_modes(
-        source_positions: torch.Tensor,
-        detector_positions: torch.Tensor,
-        source_optical_modes: torch.Tensor,
-        wavelength: torch.cfloat) -> torch.Tensor:
+    source_positions: torch.Tensor,
+    detector_positions: torch.Tensor,
+    source_optical_modes: torch.Tensor,
+    wavelength: torch.cfloat,
+) -> torch.Tensor:
     """Finds the optical modes at multiple positions from multiple sources.
 
     Args:
@@ -50,30 +51,26 @@ def find_optical_modes(
         The optical mode is complex-valued and the returned shape is (N, M).
     """
     # complex unit 'j'
-    complex_i = torch.tensor(1.j, dtype=torch.cfloat, device=device)
+    complex_i = torch.tensor(1.0j, dtype=torch.cfloat, device=device)
 
     # Broadcast detector positions to have the same shape as source positions
     # detector array of shape (K,L)
     # source array of shape (M,N)
     # shape will be (1, 1, M, N, 3)
-    pos_src_broadcast = source_positions.unsqueeze(0).unsqueeze(
-        0).to(device)
+    pos_src_broadcast = source_positions.unsqueeze(0).unsqueeze(0).to(device)
     # shape will be (K, L, 1, 1, 3)
-    pos_det_broadcast = detector_positions.unsqueeze(2).unsqueeze(
-        2).to(device)
+    pos_det_broadcast = detector_positions.unsqueeze(2).unsqueeze(2).to(device)
     # shape will be (1, 1, M, N, 3)
-    modes_src_broadcast = source_optical_modes.unsqueeze(0).unsqueeze(
-        0).to(device)
+    modes_src_broadcast = source_optical_modes.unsqueeze(0).unsqueeze(0).to(device)
 
     # Calculate the radial distance r for each source-detector pair
     squared_diff = (pos_src_broadcast - pos_det_broadcast) ** 2
     # sum along the last dimension (x, y, z)
-    r = torch.sqrt(torch.sum(squared_diff,
-                             dim=-1))
+    r = torch.sqrt(torch.sum(squared_diff, dim=-1))
 
     # z-distance, z/r^2 factor, inverse distance, and inverse wavelength
     z_diff = pos_src_broadcast[..., 2] - pos_det_broadcast[..., 2]
-    zr2_factor = z_diff / r ** 2
+    zr2_factor = z_diff / r**2
     inverse_distance = 1 / (2 * torch.pi * r)
     inverse_wavelength = 1 / (complex_i * wavelength)
 
@@ -90,14 +87,13 @@ def find_optical_modes(
     # superpose fields: for each detector, sum over source positions the total,
     # local, complex amplitude
     # dimensions 0 and 1 are detector pos.
-    total_amplitude = w_s.sum(
-        dim=(2, 3))
+    total_amplitude = w_s.sum(dim=(2, 3))
 
     return total_amplitude
 
 
 def find_intensity_map(optical_modes: torch.tensor) -> torch.tensor:
-    """ Finds the normalized light intensities from a given optical mode map.
+    """Finds the normalized light intensities from a given optical mode map.
 
     Args:
         optical_modes: Torch tensor representing the matrix of optical
@@ -117,10 +113,10 @@ def find_intensity_map(optical_modes: torch.tensor) -> torch.tensor:
     return intensity_map
 
 
-def find_phase_change(n_1: torch.Tensor, n_2: float,
-                      thickness: float,
-                      wavelength: float) -> torch.Tensor:
-    """ Finds the phase change of light passing through a material from
+def find_phase_change(
+    n_1: torch.Tensor, n_2: float, thickness: float, wavelength: float
+) -> torch.Tensor:
+    """Finds the phase change of light passing through a material from
     air.
 
     This represents the physical value of the phase neuron weight. The phase
@@ -141,11 +137,10 @@ def find_phase_change(n_1: torch.Tensor, n_2: float,
     """
     # squeeze the
     # find out the phase change
-    phase_change = (2 * torch.pi / wavelength) * (
-                n_1 - n_2) * thickness
+    phase_change = (2 * torch.pi / wavelength) * (n_1 - n_2) * thickness
 
     # get the phase change between 0 and 2pi
-    phase_change = phase_change % (2*torch.pi)
+    phase_change = phase_change % (2 * torch.pi)
 
     # transfer to [-pi, pi] interval
     phase_change = phase_change - torch.pi
@@ -153,12 +148,11 @@ def find_phase_change(n_1: torch.Tensor, n_2: float,
     return phase_change
 
 
-if __name__ == '__main__':
-    debug_refractive_indices = torch.tensor([[3.28536, 4.0493, 3.28536],
-                                             [3.28536, 4.0493, 3.28536]],
-                                            device=device)
-    debug_phase = find_phase_change(n_1=debug_refractive_indices,
-                                    n_2=1,
-                                    thickness=1E-6,
-                                    wavelength=1.55E-6)
+if __name__ == "__main__":
+    debug_refractive_indices = torch.tensor(
+        [[3.28536, 4.0493, 3.28536], [3.28536, 4.0493, 3.28536]], device=device
+    )
+    debug_phase = find_phase_change(
+        n_1=debug_refractive_indices, n_2=1, thickness=1e-6, wavelength=1.55e-6
+    )
     print(debug_phase)

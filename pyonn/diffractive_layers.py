@@ -17,7 +17,7 @@ from diffraction_equations import find_optical_modes, find_intensity_map
 
 
 class DiffractiveLayer(torch.nn.Module):
-    """ Diffractive Layer based on the Lin2018 paper built using the
+    """Diffractive Layer based on the Lin2018 paper built using the
     PyTorch backend.
 
     The diffractive layer's weights represent a matrix with complex valued
@@ -52,8 +52,14 @@ class DiffractiveLayer(torch.nn.Module):
         wavelength: The wavelength of light.
     """
 
-    def __init__(self, size: int, length: float, z_coordinate: float,
-                 z_next: float, wavelength: float) -> None:
+    def __init__(
+        self,
+        size: int,
+        length: float,
+        z_coordinate: float,
+        z_next: float,
+        wavelength: float,
+    ) -> None:
         super().__init__()
         self.size = size
         self.length = length
@@ -63,20 +69,23 @@ class DiffractiveLayer(torch.nn.Module):
 
         # initialize a size x size matrix and instantiate all elements as
         # Parameters
-        self.weights = torch.nn.Parameter(torch.randn(size=(size, size),
-                                                      dtype=torch.cfloat))
+        self.weights = torch.nn.Parameter(
+            torch.randn(size=(size, size), dtype=torch.cfloat)
+        )
 
         # the position of each neuron
-        self.neuron_coordinates = torch.from_numpy(find_coordinate_matrix(
-            n_size=self.size, n_length=self.length,
-            z_coordinate=self.z_coordinate
-        ))
+        self.neuron_coordinates = torch.from_numpy(
+            find_coordinate_matrix(
+                n_size=self.size, n_length=self.length, z_coordinate=self.z_coordinate
+            )
+        )
 
         # the position of each neuron in the next layer
-        self.neuron_coordinates_next = torch.from_numpy(find_coordinate_matrix(
-            n_size=self.size, n_length=self.length,
-            z_coordinate=self.z_next
-        ))
+        self.neuron_coordinates_next = torch.from_numpy(
+            find_coordinate_matrix(
+                n_size=self.size, n_length=self.length, z_coordinate=self.z_next
+            )
+        )
 
         # the wavelength of light
         self.wavelength = wavelength
@@ -94,7 +103,7 @@ class DiffractiveLayer(torch.nn.Module):
         return new_amplitude_weights
 
     def _get_amplitude_map(self) -> np.ndarray:
-        """ Gets the amplitude map of the neurons weights.
+        """Gets the amplitude map of the neurons weights.
 
         Returns:
             Numpy arrays of shape (size, size) containing the
@@ -109,7 +118,7 @@ class DiffractiveLayer(torch.nn.Module):
         return np.absolute(numpy_weights)
 
     def _get_phase_map(self) -> np.ndarray:
-        """ Gets the phase map of the neurons weights.
+        """Gets the phase map of the neurons weights.
 
         Returns:
             Numpy arrays of shape (size, size) containing the phase
@@ -125,30 +134,28 @@ class DiffractiveLayer(torch.nn.Module):
         # if the number of neurons is greater than 15, the labels get
         # too crowded, so show only 15 values.
         if self.size < 15:
-            x_ticks = ((np.arange(start=0, stop=self.size) + 0.5) *
-                       self.neuron_length)
-            y_ticks = ((np.arange(start=0, stop=self.size) + 0.5) *
-                       self.neuron_length)
+            x_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
+            y_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
 
         else:
-            x_ticks = (np.linspace(start=0,
-                                   stop=self.size,
-                                   num=15) + 0.5) * self.neuron_length
-            y_ticks = (np.linspace(start=0,
-                                   stop=self.size,
-                                   num=15) + 0.5) * self.neuron_length
+            x_ticks = (
+                np.linspace(start=0, stop=self.size, num=15) + 0.5
+            ) * self.neuron_length
+            y_ticks = (
+                np.linspace(start=0, stop=self.size, num=15) + 0.5
+            ) * self.neuron_length
 
         # show the figure
         plt.figure(figsize=(12, 8))
-        plt.title('Amplitude Map')
-        plt.xlabel('x-position (m)')
-        plt.ylabel('y-position (m)')
+        plt.title("Amplitude Map")
+        plt.xlabel("x-position (m)")
+        plt.ylabel("y-position (m)")
         plt.xticks(x_ticks)
         plt.yticks(y_ticks)
         plt.imshow(
             X=self._get_amplitude_map(),
-            origin='lower',
-            extent=[0, self.length, 0, self.length]
+            origin="lower",
+            extent=[0, self.length, 0, self.length],
         )
         plt.colorbar()
         plt.show()
@@ -158,36 +165,34 @@ class DiffractiveLayer(torch.nn.Module):
         # if the number of neurons is greater than 15, the labels get
         # too crowded, so show only 15 values.
         if self.size < 15:
-            x_ticks = ((np.arange(start=0, stop=self.size) + 0.5) *
-                       self.neuron_length)
-            y_ticks = ((np.arange(start=0, stop=self.size) + 0.5) *
-                       self.neuron_length)
+            x_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
+            y_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
 
         else:
-            x_ticks = (np.linspace(start=0,
-                                   stop=self.size,
-                                   num=15) + 0.5) * self.neuron_length
-            y_ticks = (np.linspace(start=0,
-                                   stop=self.size,
-                                   num=15) + 0.5) * self.neuron_length
+            x_ticks = (
+                np.linspace(start=0, stop=self.size, num=15) + 0.5
+            ) * self.neuron_length
+            y_ticks = (
+                np.linspace(start=0, stop=self.size, num=15) + 0.5
+            ) * self.neuron_length
 
         # show the figure
         plt.figure(figsize=(12, 8))
-        plt.title('Phase Map (measured in radians)')
-        plt.xlabel('x-position (m)')
-        plt.ylabel('y-position (m)')
+        plt.title("Phase Map (measured in radians)")
+        plt.xlabel("x-position (m)")
+        plt.ylabel("y-position (m)")
         plt.xticks(x_ticks)
         plt.yticks(y_ticks)
         plt.imshow(
             X=self._get_phase_map(),
-            origin='lower',
-            extent=[0, self.length, 0, self.length]
+            origin="lower",
+            extent=[0, self.length, 0, self.length],
         )
         plt.colorbar()
         plt.show()
 
     def forward(self, x) -> torch.Tensor:
-        """ Forward model based on the Rayleigh-Sommerfeld model. Please
+        """Forward model based on the Rayleigh-Sommerfeld model. Please
         check the reference supplementary for more details.
 
         Args:
@@ -213,7 +218,7 @@ class DiffractiveLayer(torch.nn.Module):
             source_positions=self.neuron_coordinates,
             detector_positions=self.neuron_coordinates_next,
             source_optical_modes=neuron_optical_modes,
-            wavelength=self.wavelength
+            wavelength=self.wavelength,
         )
 
         # return the intensity map
@@ -221,7 +226,7 @@ class DiffractiveLayer(torch.nn.Module):
 
 
 class InputLayer(torch.nn.Module):
-    """ Input layer used for Diffractive neural networks.
+    """Input layer used for Diffractive neural networks.
 
     This diffractive layer transforms black and white image to an
     'equivalent source of light' where each pixel is represented by a neuron
@@ -253,9 +258,16 @@ class InputLayer(torch.nn.Module):
         wavelength: The wavelength of light.
         size_next: The number of neurons in the first diffractive layer.
     """
-    def __init__(self, size: int, length: float,
-                 z_coordinate: float, z_next: float, size_next: int,
-                 wavelength: float) -> None:
+
+    def __init__(
+        self,
+        size: int,
+        length: float,
+        z_coordinate: float,
+        z_next: float,
+        size_next: int,
+        wavelength: float,
+    ) -> None:
         super().__init__()
         self.size = size
         self.length = length
@@ -267,22 +279,24 @@ class InputLayer(torch.nn.Module):
         self.weights = None
 
         # the position of each neuron
-        self.neuron_coordinates = torch.from_numpy(find_coordinate_matrix(
-            n_size=self.size, n_length=self.length,
-            z_coordinate=self.z_coordinate
-        ))
+        self.neuron_coordinates = torch.from_numpy(
+            find_coordinate_matrix(
+                n_size=self.size, n_length=self.length, z_coordinate=self.z_coordinate
+            )
+        )
 
         # the position of each neuron in the next layer
-        self.neuron_coordinates_next = torch.from_numpy(find_coordinate_matrix(
-            n_size=self.size_next, n_length=self.length,
-            z_coordinate=self.z_next
-        ))
+        self.neuron_coordinates_next = torch.from_numpy(
+            find_coordinate_matrix(
+                n_size=self.size_next, n_length=self.length, z_coordinate=self.z_next
+            )
+        )
 
         # the wavelength of light
         self.wavelength = wavelength
 
     def forward(self, x) -> torch.tensor:
-        """ Finds the optical mode generated by the input source at the
+        """Finds the optical mode generated by the input source at the
         position of the first diffractive layer's neurons.
         """
 
@@ -296,7 +310,7 @@ class InputLayer(torch.nn.Module):
             source_positions=self.neuron_coordinates,
             detector_positions=self.neuron_coordinates_next,
             source_optical_modes=self.weights,
-            wavelength=self.wavelength
+            wavelength=self.wavelength,
         )
 
         # return the optical mode
@@ -304,7 +318,7 @@ class InputLayer(torch.nn.Module):
 
 
 class DetectorLayer(torch.nn.Module):
-    """ Detector layer used as the last layer in a diffractive neural network.
+    """Detector layer used as the last layer in a diffractive neural network.
 
     This layer simply return the intensity map obtained by a physical
     detector. In this case, each pixel simply represents an object that
@@ -324,6 +338,7 @@ class DetectorLayer(torch.nn.Module):
             position of all neurons (x, y, z). See utils.find_coordinate_matrix
             for more information.
     """
+
     def __init__(self, size: int, length: float, z_coordinate: float) -> None:
         super().__init__()
         self.size = size
@@ -332,33 +347,33 @@ class DetectorLayer(torch.nn.Module):
         self.z_coordinate = z_coordinate
 
         # the position of each pixel
-        self.pixel_coordinates = torch.from_numpy(find_coordinate_matrix(
-            n_size=self.size, n_length=self.length,
-            z_coordinate=self.z_coordinate
-        ))
+        self.pixel_coordinates = torch.from_numpy(
+            find_coordinate_matrix(
+                n_size=self.size, n_length=self.length, z_coordinate=self.z_coordinate
+            )
+        )
 
     @staticmethod
     def forward(x: torch.tensor) -> torch.tensor:
-        """ Simply return the intensity map from a given optical mode
-        matrix. """
+        """Simply return the intensity map from a given optical mode
+        matrix."""
         intensity_map = find_intensity_map(x)
 
         return intensity_map
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # used only for testing and debugging
     # try the forward pass
     debug_input = torch.ones(size=(40, 40))
     debug_input_layer = InputLayer(
-        size=40, length=1, z_coordinate=0.0, z_next=1.0, size_next=40,
-        wavelength=0.652
+        size=40, length=1, z_coordinate=0.0, z_next=1.0, size_next=40, wavelength=0.652
     )
     debug_diffractive_layer = DiffractiveLayer(
-        size=40, length=1, z_coordinate=1.0, z_next=2.0, wavelength=0.652)
+        size=40, length=1, z_coordinate=1.0, z_next=2.0, wavelength=0.652
+    )
 
-    debug_detector_layer = DetectorLayer(size=40, length=1.0,
-                                         z_coordinate=2.0)
+    debug_detector_layer = DetectorLayer(size=40, length=1.0, z_coordinate=2.0)
 
     output = debug_input_layer(debug_input)
     output = debug_diffractive_layer(output)
