@@ -99,6 +99,54 @@ def find_real_maps(complex_amplitude_map: torch.Tensor) -> tuple:
     return intensity_map, phase_map
 
 
+def plot_real_maps(
+    complex_amplitude_map: torch.Tensor,
+    x_coordinates: np.ndarray,
+    intensity_map_title: str = "Intensity Map",
+    phase_map_title: str = "Phase Map",
+) -> None:
+    """Plots the intensity and phase maps.
+
+    Args:
+        complex_amplitude_map: Torch tensor of shape (n_pixels, n_pixels).
+            The gird coordinates must represent a square grid centred at
+            [0, 0].
+        x_coordinates: Numpy array representing the x coordinates of all
+             pixels. Must be of shape (n_pixels, ). As the square is
+             centred on [0, 0], the y_coordinates must be the exact same as
+             x_coordinates.
+        intensity_map_title: String representing the title of the intensity
+            map figure.
+        phase_map_title: String representing the title of the phase
+            map figure.
+    """
+    # generate the meshgrid necessary for plotting
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
+
+    # get the intensity and phase maps
+    intensity_map, phase_map = find_real_maps(
+        complex_amplitude_map=complex_amplitude_map
+    )
+
+    # create the figure
+    figure, axis = plt.subplots(1, 2, figsize=(20, 8))
+
+    # plot the intensity map
+    axis[0].set_title(intensity_map_title)
+    a = axis[0].pcolormesh(x_mesh, y_mesh, intensity_map, cmap="jet")
+    axis[0].set_xlabel("$x$ [mm]")
+    axis[0].set_ylabel("$y$ [mm]")
+    figure.colorbar(mappable=a)
+
+    # plot the phase map
+    axis[1].set_title(phase_map_title)
+    b = axis[1].pcolormesh(x_mesh, y_mesh, phase_map, cmap="inferno")
+    axis[1].set_xlabel("$x$ [mm]")
+    axis[1].set_ylabel("$y$ [mm]")
+    figure.colorbar(mappable=b)
+    plt.show()
+
+
 if __name__ == "__main__":
     # wavelength
     wavelength = 1.55e-6
@@ -115,7 +163,6 @@ if __name__ == "__main__":
 
     # generate the meshgrid necessary for the coordinates of the pixels
     pattern, x_coordinates, y_coordinates, z_coordinate = square_grid_pattern
-    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
 
     # generate a phase map that represents a single silt
     # all pixels have amplitude 1 but different phase
@@ -123,17 +170,16 @@ if __name__ == "__main__":
     phase_map = phase_map * np.exp(1j * (-0.1607))
     phase_map[30:70, 50] = np.exp(1j * 2.9361)
 
-    # show the initial phase map
-    plt.figure(figsize=(12, 8))
-    plt.title("Initial Phase Map")
-    plt.pcolormesh(x_mesh, y_mesh, np.angle(phase_map), cmap="jet")
-    plt.xlabel("X-Position [m]")
-    plt.ylabel("Y-Position [m]")
-    plt.colorbar()
-    plt.show()
-
     # move from numpy to torch tensors
     phase_map = torch.from_numpy(phase_map)
+
+    # show the initial phase map
+    plot_real_maps(
+        complex_amplitude_map=phase_map,
+        x_coordinates=x_coordinates,
+        intensity_map_title="Initial Intensity Map",
+        phase_map_title="Initial Phase Map",
+    )
 
     # find the propagated complex amplitude map for different distance
     for dist in [0.1, 1, 2, 5, 10, 20, 50]:
@@ -147,29 +193,11 @@ if __name__ == "__main__":
             distance=distance,
         )
 
-        debug_intensity_map, debug_phase_map = find_real_maps(
-            complex_amplitude_map=propagated_phase_map
+        plot_real_maps(
+            complex_amplitude_map=propagated_phase_map,
+            x_coordinates=x_coordinates,
+            intensity_map_title=f"Propagated intensity map at: "
+            f"{round(dist, 3)} $\mu$ m",  # noqa W605
+            phase_map_title=f"Propagated phase map at: "
+            f"{round(dist, 3)} $\mu$ m",  # noqa W605
         )
-
-        # plot the intensity and phase map
-        figure, axis = plt.subplots(1, 2, figsize=(20, 8))
-        axis[0].set_title(
-            f"Propagated intensity map at:"
-            f" "
-            f""
-            f"{round(dist, 3)} $\mu$ m"  # noqa W605
-        )
-        a = axis[0].pcolormesh(x_mesh, y_mesh, debug_intensity_map, cmap="jet")
-        axis[0].set_xlabel("$x$ [mm]")
-        axis[0].set_ylabel("$y$ [mm]")
-        figure.colorbar(mappable=a)
-
-        axis[1].set_title(
-            f"Propagated phase map at:"
-            f" {round(dist, 3)} $\mu$m"  # noqa: W605
-        )  # noqa W605
-        b = axis[1].pcolormesh(x_mesh, y_mesh, debug_phase_map, cmap="inferno")
-        axis[1].set_xlabel("$x$ [mm]")
-        axis[1].set_ylabel("$y$ [mm]")
-        figure.colorbar(mappable=b)
-        plt.show()
