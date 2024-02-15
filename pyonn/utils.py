@@ -170,27 +170,6 @@ def plot_square_grid_pattern(pattern: np.ndarray) -> None:
     plt.show()
 
 
-def create_pattern_mesh_grid(
-    x_coordinates: np.ndarray, y_coordinates: np.ndarray
-) -> tuple:
-    """Create mesh grids from given coordinates for a square grid pattern.
-
-    Args:
-        x_coordinates: Numpy array representing the x-coordinates of the pixel
-            pattern.
-        y_coordinates: Numpy array representing the y-coordinates of the pixel
-            pattern.
-
-    Returns:
-        Tuple containing the y and x mesh grids.
-    """
-    # meshgrid for x and y
-    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
-
-    # return the tuple of mesh grids
-    return x_mesh, y_mesh
-
-
 def circ_function(x: np.ndarray) -> np.ndarray:
     """Returns 1 for all values smaller than 1 and 0 otherwise.
 
