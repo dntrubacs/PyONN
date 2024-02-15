@@ -121,7 +121,7 @@ def plot_real_maps(
             map figure.
     """
     # generate the meshgrid necessary for plotting
-    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
 
     # get the intensity and phase maps
     intensity_map, phase_map = find_real_maps(
@@ -149,7 +149,7 @@ def plot_real_maps(
 
 if __name__ == "__main__":
     # wavelength
-    wavelength = 1.55e-6
+    debug_wavelength = 1.55e-6
 
     # create a square grid pattern centred on [0, 0] with pixel size 1 um
     # and pixel number 20 (400 pixels in total)
@@ -161,41 +161,42 @@ if __name__ == "__main__":
         grid_z_coordinate=0,
     )
 
-    # generate the meshgrid necessary for the coordinates of the pixels
-    pattern, x_coordinates, y_coordinates, z_coordinate = square_grid_pattern
+    # retain only the x coordinates of the pattern (necessary for the
+    # meshgrid)
+    debug_x_coordinates = square_grid_pattern[1]
 
     # generate a phase map that represents a single silt
     # all pixels have amplitude 1 but different phase
-    phase_map = np.zeros(shape=(100, 100), dtype=np.float64) + 1.0
-    phase_map = phase_map * np.exp(1j * (-0.1607))
-    phase_map[30:70, 50] = np.exp(1j * 2.9361)
+    debug_map = np.zeros(shape=(100, 100), dtype=np.float64) + 1.0
+    debug_map = debug_map * np.exp(1j * (-0.1607))
+    debug_map[30:70, 50] = np.exp(1j * 2.9361)
 
     # move from numpy to torch tensors
-    phase_map = torch.from_numpy(phase_map)
+    debug_map = torch.from_numpy(debug_map)
 
     # show the initial phase map
     plot_real_maps(
-        complex_amplitude_map=phase_map,
-        x_coordinates=x_coordinates,
+        complex_amplitude_map=debug_map,
+        x_coordinates=debug_x_coordinates,
         intensity_map_title="Initial Intensity Map",
         phase_map_title="Initial Phase Map",
     )
 
     # find the propagated complex amplitude map for different distance
     for dist in [0.1, 1, 2, 5, 10, 20, 50]:
-        distance = dist * 1e-6
+        resized_dist = dist * 1e-6
 
         # get the propagated phase map at 1 um
         propagated_phase_map = propagate_complex_amplitude_map(
-            complex_amplitude_map=phase_map,
-            x_coordinates=x_coordinates,
-            wavelength=wavelength,
-            distance=distance,
+            complex_amplitude_map=debug_map,
+            x_coordinates=debug_x_coordinates,
+            wavelength=debug_wavelength,
+            distance=resized_dist,
         )
 
         plot_real_maps(
             complex_amplitude_map=propagated_phase_map,
-            x_coordinates=x_coordinates,
+            x_coordinates=debug_x_coordinates,
             intensity_map_title=f"Propagated intensity map at: "
             f"{round(dist, 3)} $\mu$ m",  # noqa W605
             phase_map_title=f"Propagated phase map at: "
