@@ -9,7 +9,8 @@ repos:
     rev: 22.10.0
     hooks:
     -   id: black
-#-   repo: https://github.com/pycqa/flake8
- #   rev: ''  # pick a git hash / tag to point to
-  #  hooks:
-   # -   id: flake8
+        args: [--line-length=79]
+-   repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+    -   id: flake8

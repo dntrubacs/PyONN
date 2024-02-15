@@ -11,12 +11,13 @@ def get_u(u_0, z, wavelength, fx_mesh, fy_mesh):
     """Finds the propagated phase map after a distance z"""
     # find the circ_term
     # sqrt term for circ function
-    square_term = (
-        1 - torch.square((wavelength * fx_mesh)) - torch.square((wavelength * fy_mesh))
-    )
+    # fx and fy values multiplied y wavelength
+    alpha = wavelength * fx_mesh
+    beta = wavelength * fy_mesh
+    square_term = torch.abs(1 - torch.square(alpha) - torch.square(beta))
 
     # take sqrt of the term
-    sqrt_term = (2 * torch.pi / wavelength) * torch.sqrt(torch.abs(square_term))
+    sqrt_term = (2 * torch.pi / wavelength) * torch.sqrt(square_term)
 
     # find the exp term
     exp_term = torch.exp(1j * z * sqrt_term)
@@ -119,7 +120,11 @@ if __name__ == "__main__":
 
         # get the propagated phase map at 1 um
         u = get_u(
-            u_0=u_0, z=distance, wavelength=wavelength, fx_mesh=fx_mesh, fy_mesh=fy_mesh
+            u_0=u_0,
+            z=distance,
+            wavelength=wavelength,
+            fx_mesh=fx_mesh,
+            fy_mesh=fy_mesh,
         )
 
         # make a copy of u as a numpy array
@@ -129,14 +134,22 @@ if __name__ == "__main__":
         figure, axis = plt.subplots(1, 2, figsize=(20, 8))
 
         axis[0].set_title(
-            f"Propagated intensity map at: " f"" f"{round(dist, 3)} $\mu$ m"
+            f"Propagated intensity map at:"
+            f" "
+            f""
+            f"{round(dist, 3)} $\mu$ m"  # noqa W605
         )
-        a = axis[0].pcolormesh(x_mesh, y_mesh, np.square(np.abs(u_np)), cmap="jet")
+        a = axis[0].pcolormesh(
+            x_mesh, y_mesh, np.square(np.abs(u_np)), cmap="jet"
+        )
         axis[0].set_xlabel("$x$ [mm]")
         axis[0].set_ylabel("$y$ [mm]")
         figure.colorbar(mappable=a)
 
-        axis[1].set_title(f"Propagated phase map at: {round(dist, 3)} $\mu$m")
+        axis[1].set_title(
+            f"Propagated phase map at:"
+            f" {round(dist, 3)} $\mu$m"  # noqa: W605
+        )  # noqa W605
         b = axis[1].pcolormesh(x_mesh, y_mesh, np.angle(u_np), cmap="inferno")
         axis[1].set_xlabel("$x$ [mm]")
         axis[1].set_ylabel("$y$ [mm]")

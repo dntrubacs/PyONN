@@ -61,7 +61,9 @@ def find_optical_modes(
     # shape will be (K, L, 1, 1, 3)
     pos_det_broadcast = detector_positions.unsqueeze(2).unsqueeze(2).to(device)
     # shape will be (1, 1, M, N, 3)
-    modes_src_broadcast = source_optical_modes.unsqueeze(0).unsqueeze(0).to(device)
+    modes_src_broadcast = (
+        source_optical_modes.unsqueeze(0).unsqueeze(0).to(device)
+    )
 
     # Calculate the radial distance r for each source-detector pair
     squared_diff = (pos_src_broadcast - pos_det_broadcast) ** 2

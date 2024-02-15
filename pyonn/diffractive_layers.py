@@ -76,14 +76,18 @@ class DiffractiveLayer(torch.nn.Module):
         # the position of each neuron
         self.neuron_coordinates = torch.from_numpy(
             find_coordinate_matrix(
-                n_size=self.size, n_length=self.length, z_coordinate=self.z_coordinate
+                n_size=self.size,
+                n_length=self.length,
+                z_coordinate=self.z_coordinate,
             )
         )
 
         # the position of each neuron in the next layer
         self.neuron_coordinates_next = torch.from_numpy(
             find_coordinate_matrix(
-                n_size=self.size, n_length=self.length, z_coordinate=self.z_next
+                n_size=self.size,
+                n_length=self.length,
+                z_coordinate=self.z_next,
             )
         )
 
@@ -134,8 +138,12 @@ class DiffractiveLayer(torch.nn.Module):
         # if the number of neurons is greater than 15, the labels get
         # too crowded, so show only 15 values.
         if self.size < 15:
-            x_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
-            y_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
+            x_ticks = (
+                np.arange(start=0, stop=self.size) + 0.5
+            ) * self.neuron_length
+            y_ticks = (
+                np.arange(start=0, stop=self.size) + 0.5
+            ) * self.neuron_length
 
         else:
             x_ticks = (
@@ -165,8 +173,12 @@ class DiffractiveLayer(torch.nn.Module):
         # if the number of neurons is greater than 15, the labels get
         # too crowded, so show only 15 values.
         if self.size < 15:
-            x_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
-            y_ticks = (np.arange(start=0, stop=self.size) + 0.5) * self.neuron_length
+            x_ticks = (
+                np.arange(start=0, stop=self.size) + 0.5
+            ) * self.neuron_length
+            y_ticks = (
+                np.arange(start=0, stop=self.size) + 0.5
+            ) * self.neuron_length
 
         else:
             x_ticks = (
@@ -281,14 +293,18 @@ class InputLayer(torch.nn.Module):
         # the position of each neuron
         self.neuron_coordinates = torch.from_numpy(
             find_coordinate_matrix(
-                n_size=self.size, n_length=self.length, z_coordinate=self.z_coordinate
+                n_size=self.size,
+                n_length=self.length,
+                z_coordinate=self.z_coordinate,
             )
         )
 
         # the position of each neuron in the next layer
         self.neuron_coordinates_next = torch.from_numpy(
             find_coordinate_matrix(
-                n_size=self.size_next, n_length=self.length, z_coordinate=self.z_next
+                n_size=self.size_next,
+                n_length=self.length,
+                z_coordinate=self.z_next,
             )
         )
 
@@ -349,7 +365,9 @@ class DetectorLayer(torch.nn.Module):
         # the position of each pixel
         self.pixel_coordinates = torch.from_numpy(
             find_coordinate_matrix(
-                n_size=self.size, n_length=self.length, z_coordinate=self.z_coordinate
+                n_size=self.size,
+                n_length=self.length,
+                z_coordinate=self.z_coordinate,
             )
         )
 
@@ -367,7 +385,12 @@ if __name__ == "__main__":
     # try the forward pass
     debug_input = torch.ones(size=(40, 40))
     debug_input_layer = InputLayer(
-        size=40, length=1, z_coordinate=0.0, z_next=1.0, size_next=40, wavelength=0.652
+        size=40,
+        length=1,
+        z_coordinate=0.0,
+        z_next=1.0,
+        size_next=40,
+        wavelength=0.652,
     )
     debug_diffractive_layer = DiffractiveLayer(
         size=40, length=1, z_coordinate=1.0, z_next=2.0, wavelength=0.652

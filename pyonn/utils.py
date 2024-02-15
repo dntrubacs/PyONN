@@ -32,7 +32,11 @@ def find_coordinate_matrix(
     for i in range(n_size):
         for j in range(n_size):
             matrix[i][j] = np.array(
-                [pixel_length * (i + 0.5), pixel_length * (j + 0.5), z_coordinate]
+                [
+                    pixel_length * (i + 0.5),
+                    pixel_length * (j + 0.5),
+                    z_coordinate,
+                ]
             )
 
     return matrix
@@ -86,14 +90,18 @@ def create_square_grid_pattern(
         x_coordinates = (
             distance
             * np.arange(
-                start=-int(pixel_number / 2), stop=int(pixel_number / 2) + 1, step=1
+                start=-int(pixel_number / 2),
+                stop=int(pixel_number / 2) + 1,
+                step=1,
             )
             + center_coordinates[0]
         )
         y_coordinates = (
             distance
             * np.arange(
-                start=-int(pixel_number / 2), stop=int(pixel_number / 2) + 1, step=1
+                start=-int(pixel_number / 2),
+                stop=int(pixel_number / 2) + 1,
+                step=1,
             )
             + center_coordinates[1]
         )
@@ -103,14 +111,18 @@ def create_square_grid_pattern(
         x_coordinates = (
             distance
             * np.arange(
-                start=-pixel_number / 2 + 0.5, stop=pixel_number / 2 + 0.5, step=1
+                start=-pixel_number / 2 + 0.5,
+                stop=pixel_number / 2 + 0.5,
+                step=1,
             )
             + center_coordinates[0]
         )
         y_coordinates = (
             distance
             * np.arange(
-                start=-pixel_number / 2 + 0.5, stop=pixel_number / 2 + 0.5, step=1
+                start=-pixel_number / 2 + 0.5,
+                stop=pixel_number / 2 + 0.5,
+                step=1,
             )
             + center_coordinates[1]
         )
@@ -204,10 +216,11 @@ if __name__ == "__main__":
     debug_x = np.array([[0.2, 5], [0.3, 4]])
     circ_function(debug_x)
     # used only for testing and debugging
-    # debug_matrix = create_square_grid_pattern(
-    # center_coordinates=np.array([0, 0]),
-    #  pixel_length=0.8E-6,
-    ##   pixel_separation=0.2E-6,
-    #   pixel_number=3,
-    #   grid_z_coordinate=1E-6)
-# plot_square_grid_pattern(pattern=debug_matrix[0])
+    debug_matrix = create_square_grid_pattern(
+        center_coordinates=np.array([0, 0]),
+        pixel_length=0.8e-6,
+        pixel_separation=0.2e-6,
+        pixel_number=3,
+        grid_z_coordinate=1e-6,
+    )
+    # plot_square_grid_pattern(pattern=debug_matrix[0])

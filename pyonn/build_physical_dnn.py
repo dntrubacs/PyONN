@@ -4,8 +4,10 @@ transmission values of neurons to different refractive indices and depths. """
 
 import numpy as np
 from matplotlib import pyplot as plt
+import torch
 
-from diffraction_equations import *
+from diffraction_equations import find_phase_change, find_optical_modes
+from diffraction_equations import find_intensity_map
 from utils import create_square_grid_pattern, plot_square_grid_pattern
 
 # define device as a global variable to use the gpu if available
@@ -207,11 +209,17 @@ class PhysicalDiffractiveLayer:
             # keep only 15 values for x_ticks and y_ticks (don't overcrowd
             # the plot)
             if len(x_ticks) > 10:
-                x_ticks = np.linspace(start=min(x_ticks), stop=max(x_ticks), num=10)
-                y_ticks = np.linspace(start=min(y_ticks), stop=max(y_ticks), num=10)
+                x_ticks = np.linspace(
+                    start=min(x_ticks), stop=max(x_ticks), num=10
+                )
+                y_ticks = np.linspace(
+                    start=min(y_ticks), stop=max(y_ticks), num=10
+                )
 
             # show the map
-            plt.imshow(intensity_map.detach().cpu().numpy(), cmap="jet", extent=limits)
+            plt.imshow(
+                intensity_map.detach().cpu().numpy(), cmap="jet", extent=limits
+            )
             plt.xticks(x_ticks)
             plt.yticks(y_ticks)
             plt.colorbar(cmap="jet")
@@ -245,7 +253,9 @@ if __name__ == "__main__":
     )
 
     # create a torch tensor and move it to the device
-    debug_neuron_coordinates = torch.from_numpy(debug_neuron_coordinates).to(device)
+    debug_neuron_coordinates = torch.from_numpy(debug_neuron_coordinates).to(
+        device
+    )
 
     debug_pdl = PhysicalDiffractiveLayer(
         neuron_coordinates=debug_neuron_coordinates,
