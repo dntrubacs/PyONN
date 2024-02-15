@@ -75,6 +75,30 @@ def propagate_complex_amplitude_map(
     return torch.fft.ifft2(u_0 * transfer_term)
 
 
+def find_real_maps(complex_amplitude_map: torch.Tensor) -> tuple:
+    """Calculate the intensity and phase map.
+
+    Keep in mind that this function returns a numpy array from a torch tensor.
+
+    Args:
+        complex_amplitude_map: Torch tensor representing a complex amplitude
+            map (amplitude and phase).
+
+    Returns:
+        Tuple containing 2 numpy arrays representing the intensity and
+        phase map.
+    """
+    # make a numpy copy of the complex_amplitude map
+    u_np = complex_amplitude_map.detach().cpu().numpy()
+
+    # make the intensity and phase map
+    intensity_map = np.square(np.abs(u_np))
+    phase_map = np.angle(u_np)
+
+    # return the intensity and phase maps
+    return intensity_map, phase_map
+
+
 if __name__ == "__main__":
     # wavelength
     wavelength = 1.55e-6
@@ -123,8 +147,9 @@ if __name__ == "__main__":
             distance=distance,
         )
 
-        # make a copy of u as a numpy array
-        u_np = propagated_phase_map.detach().numpy()
+        debug_intensity_map, debug_phase_map = find_real_maps(
+            complex_amplitude_map=propagated_phase_map
+        )
 
         # plot the intensity and phase map
         figure, axis = plt.subplots(1, 2, figsize=(20, 8))
@@ -134,8 +159,7 @@ if __name__ == "__main__":
             f""
             f"{round(dist, 3)} $\mu$ m"  # noqa W605
         )
-        a = axis[0].pcolormesh(x_mesh, y_mesh, np.square(np.abs(u_np)),
-                               cmap="jet")
+        a = axis[0].pcolormesh(x_mesh, y_mesh, debug_intensity_map, cmap="jet")
         axis[0].set_xlabel("$x$ [mm]")
         axis[0].set_ylabel("$y$ [mm]")
         figure.colorbar(mappable=a)
@@ -144,7 +168,7 @@ if __name__ == "__main__":
             f"Propagated phase map at:"
             f" {round(dist, 3)} $\mu$m"  # noqa: W605
         )  # noqa W605
-        b = axis[1].pcolormesh(x_mesh, y_mesh, np.angle(u_np), cmap="inferno")
+        b = axis[1].pcolormesh(x_mesh, y_mesh, debug_phase_map, cmap="inferno")
         axis[1].set_xlabel("$x$ [mm]")
         axis[1].set_ylabel("$y$ [mm]")
         figure.colorbar(mappable=b)
