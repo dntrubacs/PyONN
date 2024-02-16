@@ -75,7 +75,8 @@ def propagate_complex_amplitude_map(
     return torch.fft.ifft2(u_0 * transfer_term)
 
 
-def find_real_maps(complex_amplitude_map: torch.Tensor) -> tuple:
+def find_real_maps(complex_amplitude_map: torch.Tensor,
+                   normalized: bool = False) -> tuple:
     """Calculate the intensity and phase map.
 
     Keep in mind that this function returns a numpy array from a torch tensor.
@@ -83,6 +84,8 @@ def find_real_maps(complex_amplitude_map: torch.Tensor) -> tuple:
     Args:
         complex_amplitude_map: Torch tensor representing a complex amplitude
             map (amplitude and phase).
+        normalized: Whether to return the intensity map normalized (all values
+            are between 0 and 1)
 
     Returns:
         Tuple containing 2 numpy arrays representing the intensity and
@@ -94,6 +97,10 @@ def find_real_maps(complex_amplitude_map: torch.Tensor) -> tuple:
     # make the intensity and phase map
     intensity_map = np.square(np.abs(u_np))
     phase_map = np.angle(u_np)
+
+    # normalize the intensity_map if required
+    if normalized:
+        intensity_map = intensity_map/np.max(intensity_map)
 
     # return the intensity and phase maps
     return intensity_map, phase_map
@@ -164,6 +171,7 @@ if __name__ == "__main__":
     # retain only the x coordinates of the pattern (necessary for the
     # meshgrid)
     debug_x_coordinates = square_grid_pattern[1]
+    pattern = square_grid_pattern[0]
 
     # generate a phase map that represents a single silt
     # all pixels have amplitude 1 but different phase
