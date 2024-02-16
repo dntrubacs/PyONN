@@ -8,7 +8,6 @@ https://docs.google.com/file/d/0B78A_rsP6RDSS3VRWk12Y2FUcVk/edit?resourcekey=0-E
 https://github.com/lukepolson/youtube_channel/blob/3642cdd80f9200a5db4e622a3fe2c1a8f6868ecd/Python%20Metaphysics%20Series/vid29.ipynb
 """  # noqa: C901
 import numpy as np
-from utils import create_square_grid_pattern
 from matplotlib import pyplot as plt
 import torch
 
@@ -75,8 +74,9 @@ def propagate_complex_amplitude_map(
     return torch.fft.ifft2(u_0 * transfer_term)
 
 
-def find_real_maps(complex_amplitude_map: torch.Tensor,
-                   normalized: bool = False) -> tuple:
+def find_real_maps(
+    complex_amplitude_map: torch.Tensor, normalized: bool = False
+) -> tuple:
     """Calculate the intensity and phase map.
 
     Keep in mind that this function returns a numpy array from a torch tensor.
@@ -100,7 +100,7 @@ def find_real_maps(complex_amplitude_map: torch.Tensor,
 
     # normalize the intensity_map if required
     if normalized:
-        intensity_map = intensity_map/np.max(intensity_map)
+        intensity_map = intensity_map / np.max(intensity_map)
 
     # return the intensity and phase maps
     return intensity_map, phase_map
@@ -132,7 +132,7 @@ def plot_real_maps(
 
     # get the intensity and phase maps
     intensity_map, phase_map = find_real_maps(
-        complex_amplitude_map=complex_amplitude_map
+        complex_amplitude_map=complex_amplitude_map, normalized=True
     )
 
     # create the figure
@@ -155,6 +155,9 @@ def plot_real_maps(
 
 
 if __name__ == "__main__":
+    from utils import create_square_grid_pattern
+    from diffraction_equations import find_phase_change
+
     # wavelength
     debug_wavelength = 1.55e-6
 
@@ -173,11 +176,23 @@ if __name__ == "__main__":
     debug_x_coordinates = square_grid_pattern[1]
     pattern = square_grid_pattern[0]
 
+    # find the phase change for crystalline and amorphous Sb2Se3 film of
+    # thickness 1 um
+    amorphous_phase_change = find_phase_change(
+        n_1=3.28536, thickness=1e-6, wavelength=1.55e-6, n_2=1.0
+    )
+    crystalline_phase_change = find_phase_change(
+        n_1=4.04933, thickness=1e-6, wavelength=1.55e-6, n_2=1.0
+    )
+
     # generate a phase map that represents a single silt
     # all pixels have amplitude 1 but different phase
     debug_map = np.zeros(shape=(100, 100), dtype=np.float64) + 1.0
-    debug_map = debug_map * np.exp(1j * (-0.1607))
-    debug_map[30:70, 50] = np.exp(1j * 2.9361)
+
+    # create a complex amplitude map for the phase change material
+    # e^(j*phase)
+    debug_map = debug_map * np.exp(1j * amorphous_phase_change)
+    debug_map[30:70, 50] = np.exp(1j * crystalline_phase_change)
 
     # move from numpy to torch tensors
     debug_map = torch.from_numpy(debug_map)

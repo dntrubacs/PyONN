@@ -23,6 +23,7 @@ neural network used please check the following References:
 """
 
 import torch
+import numpy as np
 
 # define device as a global variable to use the gpu if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -116,8 +117,11 @@ def find_intensity_map(optical_modes: torch.tensor) -> torch.tensor:
 
 
 def find_phase_change(
-    n_1: torch.Tensor, n_2: float, thickness: float, wavelength: float
-) -> torch.Tensor:
+    n_1: float,
+    thickness: float,
+    wavelength: float,
+    n_2: float = 1.0,
+) -> float:
     """Finds the phase change of light passing through a material from
     air.
 
@@ -139,7 +143,7 @@ def find_phase_change(
     """
     # squeeze the
     # find out the phase change
-    phase_change = (2 * torch.pi / wavelength) * (n_1 - n_2) * thickness
+    phase_change = (2 * np.pi / wavelength) * (n_1 - n_2) * thickness
 
     # get the phase change between 0 and 2pi
     phase_change = phase_change % (2 * torch.pi)
@@ -154,7 +158,3 @@ if __name__ == "__main__":
     debug_refractive_indices = torch.tensor(
         [[3.28536, 4.0493, 3.28536], [3.28536, 4.0493, 3.28536]], device=device
     )
-    debug_phase = find_phase_change(
-        n_1=debug_refractive_indices, n_2=1, thickness=1e-6, wavelength=1.55e-6
-    )
-    print(debug_phase)
