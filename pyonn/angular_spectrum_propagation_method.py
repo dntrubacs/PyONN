@@ -10,7 +10,6 @@ https://github.com/lukepolson/youtube_channel/blob/3642cdd80f9200a5db4e622a3fe2c
 import numpy as np
 from matplotlib import pyplot as plt
 import torch
-import pickle
 import os
 
 
@@ -20,7 +19,7 @@ def propagate_complex_amplitude_map(
     wavelength: float,
     distance: float,
     folder_name: str = None,
-    data_name: str = 'propagated_phase_map'
+    data_name: str = "propagated_phase_map",
 ) -> torch.Tensor:
     """Propagates a given phase map for a given distance.
 
@@ -93,14 +92,18 @@ def propagate_complex_amplitude_map(
         folder_save = os.path.join(folder_name, data_name)
         os.mkdir(folder_save)
 
+        # make a numpy copy of the propagated_complex_amplitude_map
+        propagated_map_np = propagated_complex_amplitude_map.detach().numpy()
+
         # save the data inside the folder with pickle
-        with open(os.path.join(folder_save, 'x_mesh'), 'wb') as handle:
+        with open(os.path.join(folder_save, "x_mesh"), "wb") as handle:
             pickle.dump(x_mesh, handle)
-        with open(os.path.join(folder_save, 'y_mesh'), 'wb') as handle:
+        with open(os.path.join(folder_save, "y_mesh"), "wb") as handle:
             pickle.dump(y_mesh, handle)
-        with open(os.path.join(folder_save, 'complex_amplitude_map'),
-                  'wb') as handle:
-            pickle.dump(propagated_complex_amplitude_map, handle)
+        with open(
+            os.path.join(folder_save, "complex_amplitude_map"), "wb"
+        ) as handle:
+            pickle.dump(propagated_map_np, handle)
 
     return propagated_complex_amplitude_map
 
@@ -242,14 +245,14 @@ if __name__ == "__main__":
         resized_dist = dist * 1e-6
 
         # get the propagated phase map at 1 um
-        os.chdir('C:/Users/dit1u20/PycharmProjects/PyONN')
+        os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
         propagated_phase_map = propagate_complex_amplitude_map(
             complex_amplitude_map=debug_map,
             x_coordinates=debug_x_coordinates,
             wavelength=debug_wavelength,
             distance=resized_dist,
-            folder_name='results/scalar/single_slit',
-            data_name=f'propagated map at distance {dist} um'
+            folder_name="results/scalar/single_slit",
+            data_name=f"propagated map at distance {dist} um",
         )
 
         plot_real_maps(
