@@ -192,7 +192,7 @@ if __name__ == "__main__":
     # create a complex amplitude map for the phase change material
     # e^(j*phase)
     debug_map = debug_map * np.exp(1j * amorphous_phase_change)
-    debug_map[30:70, 50] = np.exp(1j * crystalline_phase_change)
+    debug_map[25:75, 50] = np.exp(1j * crystalline_phase_change)
 
     # move from numpy to torch tensors
     debug_map = torch.from_numpy(debug_map)
