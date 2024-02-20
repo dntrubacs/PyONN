@@ -10,6 +10,8 @@ https://github.com/lukepolson/youtube_channel/blob/3642cdd80f9200a5db4e622a3fe2c
 import numpy as np
 from matplotlib import pyplot as plt
 import torch
+import pickle
+import os
 
 
 def propagate_complex_amplitude_map(
@@ -17,6 +19,8 @@ def propagate_complex_amplitude_map(
     x_coordinates: np.ndarray,
     wavelength: float,
     distance: float,
+    folder_name: str = None,
+    data_name: str = 'propagated_phase_map'
 ) -> torch.Tensor:
     """Propagates a given phase map for a given distance.
 
@@ -38,6 +42,12 @@ def propagate_complex_amplitude_map(
         wavelength: The wavelength of light.
         distance: Distance at which the propagated map is calculated (must be
             greater than 0).
+        folder_name: Name of the folder where the data will be saved. If None
+            is given, the data will not be saved. The data saved will be the
+            x_mesh, y_mesh and the numpy array representing the complex
+            amplitude map.
+        data_name: name of the data to be saved. Defaults to
+            'propagated_map'.
 
     Returns:
         Torch tensor representing the propagate complex amplitude map
@@ -49,7 +59,7 @@ def propagate_complex_amplitude_map(
     # get the fourier space (fx and fy represent the spacial frequencies)
     fx = torch.fft.fftfreq(n=len(x_coordinates), d=np.diff(x_coordinates)[0])
 
-    # create a meshgrid of fx and fy frequencies. fx and fy are the same
+    # create a mesh grid of fx and fy frequencies. fx and fy are the same
     # as the original grid is a square centred on 0.
     fx_mesh, fy_mesh = torch.meshgrid(fx, fx, indexing="ij")
 
@@ -71,7 +81,28 @@ def propagate_complex_amplitude_map(
     # find the transfer function term
     transfer_term = torch.exp(1j * distance * sqrt_term)
 
-    return torch.fft.ifft2(u_0 * transfer_term)
+    # propagated complex amplitude map
+    propagated_complex_amplitude_map = torch.fft.ifft2(u_0 * transfer_term)
+
+    # save the data if necessary
+    if folder_name is not None:
+        # generate the mesh grid necessary for saving the data
+        x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
+
+        # make a directory inside the folder with file name
+        folder_save = os.path.join(folder_name, data_name)
+        os.mkdir(folder_save)
+
+        # save the data inside the folder with pickle
+        with open(os.path.join(folder_save, 'x_mesh'), 'wb') as handle:
+            pickle.dump(x_mesh, handle)
+        with open(os.path.join(folder_save, 'y_mesh'), 'wb') as handle:
+            pickle.dump(y_mesh, handle)
+        with open(os.path.join(folder_save, 'complex_amplitude_map'),
+                  'wb') as handle:
+            pickle.dump(propagated_complex_amplitude_map, handle)
+
+    return propagated_complex_amplitude_map
 
 
 def find_real_maps(
@@ -127,9 +158,8 @@ def plot_real_maps(
         phase_map_title: String representing the title of the phase
             map figure.
     """
-    # generate the meshgrid necessary for plotting
+    # generate the mesh grid necessary for plotting
     x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
-    print(min(x_coordinates), max(x_coordinates))
 
     # get the intensity and phase maps
     intensity_map, phase_map = find_real_maps(
@@ -158,6 +188,7 @@ def plot_real_maps(
 if __name__ == "__main__":
     from utils import create_square_grid_pattern
     from diffraction_equations import find_phase_change
+    import pickle
 
     # wavelength
     debug_wavelength = 1.55e-6
@@ -211,11 +242,14 @@ if __name__ == "__main__":
         resized_dist = dist * 1e-6
 
         # get the propagated phase map at 1 um
+        os.chdir('C:/Users/dit1u20/PycharmProjects/PyONN')
         propagated_phase_map = propagate_complex_amplitude_map(
             complex_amplitude_map=debug_map,
             x_coordinates=debug_x_coordinates,
             wavelength=debug_wavelength,
             distance=resized_dist,
+            folder_name='results/scalar/single_slit',
+            data_name=f'propagated map at distance {dist} um'
         )
 
         plot_real_maps(
