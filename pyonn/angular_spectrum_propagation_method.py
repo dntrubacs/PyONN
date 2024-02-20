@@ -129,6 +129,7 @@ def plot_real_maps(
     """
     # generate the meshgrid necessary for plotting
     x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
+    print(min(x_coordinates), max(x_coordinates))
 
     # get the intensity and phase maps
     intensity_map, phase_map = find_real_maps(
