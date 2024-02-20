@@ -5,9 +5,17 @@ and compare with the ones obtained through scalar methods.
 """
 
 import numpy as np
+import pickle
+import os
 
 
-def process_ftd_data(fdtd_path: str, max_x_value: float, max_y_value) -> tuple:
+def process_ftd_data(
+    fdtd_path: str,
+    max_x_value: float,
+    max_y_value,
+    folder_name: str = None,
+    data_name: str = "propagated_phase_map",
+) -> tuple:
     """Processes the FDTD simulation raw data and returns the electric field
     values.
 
@@ -18,6 +26,12 @@ def process_ftd_data(fdtd_path: str, max_x_value: float, max_y_value) -> tuple:
             in the rage (-max_x_value, max_x_value) will be kept.
         max_y_value: Maximum value for the x coordinates. Only data
             in the rage (-max_y_value, max_y_value) will be kept.
+        folder_name: Name of the folder where the data will be saved. If None
+            is given, the data will not be saved. The data saved will be the
+            x_mesh, y_mesh and the numpy array representing the complex
+            amplitude map.
+        data_name: name of the data to be saved. Defaults to
+            'propagated_map'.
 
     Returns:
         Tuple containing the x and y numpy mesh grids plus a numpy array
@@ -125,6 +139,21 @@ def process_ftd_data(fdtd_path: str, max_x_value: float, max_y_value) -> tuple:
     intensity = intensity[index_min_x:index_max_x, index_min_y:index_max_y]
     intensity = intensity.T
 
+    # save the data if necessary
+    if folder_name is not None:
+
+        # make a directory inside the folder with file name
+        folder_save = os.path.join(folder_name, data_name)
+        os.mkdir(folder_save)
+
+        # save the data inside the folder with pickle
+        with open(os.path.join(folder_save, "x_mesh"), "wb") as handle:
+            pickle.dump(x_mesh, handle)
+        with open(os.path.join(folder_save, "y_mesh"), "wb") as handle:
+            pickle.dump(y_mesh, handle)
+        with open(os.path.join(folder_save, "intensity_map"), "wb") as handle:
+            pickle.dump(intensity, handle)
+
     # return the x, y and intensity arrays
     return x_mesh, y_mesh, intensity
 
@@ -132,9 +161,14 @@ def process_ftd_data(fdtd_path: str, max_x_value: float, max_y_value) -> tuple:
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
-    fdtd_file = "single slit 10 um distance.txt"
+    fdtd_file = "ftdt-simulation/single slit 10 um distance.txt"
+    os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
     debug_x, debug_y, debug_intensity = process_ftd_data(
-        fdtd_path=fdtd_file, max_x_value=3.96e-5, max_y_value=3.96e-5
+        fdtd_path=fdtd_file,
+        max_x_value=3.96e-5,
+        max_y_value=3.96e-5,
+        folder_name="results/fdtd/single_slit",
+        data_name=f"propagated map at distance {10} um",
     )
 
     plt.pcolormesh(debug_x, debug_y, debug_intensity, cmap="jet")

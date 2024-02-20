@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import torch
 import os
+import pickle
 
 
 def propagate_complex_amplitude_map(
@@ -191,7 +192,6 @@ def plot_real_maps(
 if __name__ == "__main__":
     from utils import create_square_grid_pattern
     from diffraction_equations import find_phase_change
-    import pickle
 
     # wavelength
     debug_wavelength = 1.55e-6
