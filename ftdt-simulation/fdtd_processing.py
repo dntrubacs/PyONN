@@ -161,14 +161,14 @@ def process_ftd_data(
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
-    fdtd_file = "ftdt-simulation/single slit 10 um distance.txt"
+    fdtd_file = "ftdt-simulation/single slit 50 um distance.txt"
     os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
     debug_x, debug_y, debug_intensity = process_ftd_data(
         fdtd_path=fdtd_file,
         max_x_value=3.96e-5,
         max_y_value=3.96e-5,
         folder_name="results/fdtd/single_slit",
-        data_name=f"propagated map at distance {10} um",
+        data_name=f"propagated map at distance {50} um",
     )
 
     plt.pcolormesh(debug_x, debug_y, debug_intensity, cmap="jet")
