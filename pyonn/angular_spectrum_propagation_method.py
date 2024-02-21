@@ -226,14 +226,14 @@ if __name__ == "__main__":
 
     # create a complex amplitude map for the phase change material
     # e^(j*phase)
+    # set the background of the map to amorphous phase change
     debug_map = debug_map * np.exp(1j * amorphous_phase_change)
-    debug_map[25:75, 20] = np.exp(1j * crystalline_phase_change)
-    debug_map[25:75, 30] = np.exp(1j * crystalline_phase_change)
-    debug_map[25:75, 40] = np.exp(1j * crystalline_phase_change)
-    debug_map[25:75, 50] = np.exp(1j * crystalline_phase_change)
-    debug_map[25:75, 60] = np.exp(1j * crystalline_phase_change)
-    debug_map[25:75, 70] = np.exp(1j * crystalline_phase_change)
-    debug_map[25:75, 80] = np.exp(1j * crystalline_phase_change)
+    print(square_grid_pattern[1][5], square_grid_pattern[1][95], '>>>>')
+    # greate a grid of crystalline phase change
+    for i in range(9):
+        # set the grid on both x and y
+        debug_map[5:95, (i+1)*10] = np.exp(1j * crystalline_phase_change)
+        debug_map[(i + 1) * 10, 5:95] = np.exp(1j * crystalline_phase_change)
 
     # move from numpy to torch tensors
     debug_map = torch.from_numpy(debug_map)
@@ -257,8 +257,8 @@ if __name__ == "__main__":
             x_coordinates=debug_x_coordinates,
             wavelength=debug_wavelength,
             distance=resized_dist,
-            folder_name="results/multiple_slits/scalar/",
-            data_name=f"propagated map at distance {dist} um",
+            folder_name="results/grid/scalar",
+            data_name=f"propagated map at distance {dist} um"
         )
 
         plot_real_maps(

@@ -1,125 +1,90 @@
 """
-Created by Daniel-Iosif Trubacs on 2 January 2024 for the UoS Integrated
+Created by Daniel-Iosif Trubacs on 21 February 2024 for the UoS Integrated
 Nanophotonics Group. The purpose of this module is to create a diffractive
 layer class (based on the PyTorch architecture) DiffractiveLayer to be used on
 the simulation of optical neural networks.
 
+The current diffractive layers are only phase modulated and represent
+only scalar simulation based on the Fourier optics method. All the
+equations used as a backend for the propagation of light are available in the
+angular_spectrum_propagation_method module.
+
 For more information about the mathematical algorithms behind the optical
 neural network used please check the following References:
 
-1. https://www.science.org/doi/10.1126/science.aat8084#supplementary-materials
+Qian, C., Lin, X., Lin, X. et al. Performing optical logic operations by a
+diffractive neural network. Light Sci Appl 9, 59 (2020).
+https://doi.org/10.1038/s41377-020-0303-2
+
+1. C. Wu, J. Zhao, Q. Hu, R. Zeng, and M. Zhang, Non-volatile
+reconfigurable digital optical diffractive neural network based on
+phase change material, 2023. DOI:10 . 48550 / ARXIV. 2305 . 11196.
 """
 import numpy as np
 import torch
 from utils import find_coordinate_matrix
 from matplotlib import pyplot as plt
-from diffraction_equations import find_optical_modes, find_intensity_map
+from angular_spectrum_propagation_method import *
 
 
 class DiffractiveLayer(torch.nn.Module):
-    """Diffractive Layer based on the Lin2018 paper built using the
-    PyTorch backend.
+    """Diffractive Layer with the architecture based on the Lin2018 paper built
+    using the PyTorch backend and propagation based on the angular spectrum
+    method.
 
     The diffractive layer's weights represent a matrix with complex valued
     elements that have an amplitude (always between 0 and 1) and phase (always
-    between 0 and 2*pi). The forward pass is based on the Rayleigh-Sommerfeld
-    diffraction equation (see Reference 1). As the amplitude part of the
-    transmission can only be between 0 and 1, the weights are always clipped
-    to have an absolute value smaller than 1.
+    between 0 and 2*pi). The forward pass is based on the Angular Spectrum
+    method. In this case, the amplitude of each neuron is always set to 1.
+
+    Keep in mind that in a neural network composed of multiple Diffractive
+    Layers, all neuron and x and y coordinates must be the same. Also,
+    all diffractive layers must have the same number of neurons.
 
     Attributes:
-        size: The numbers of neurons in a given column or row (the total
+        n_size: The numbers of neurons in a given column or row (the total
             number of neurons will be n_size x n_size). The values of the
             neurons is complex, and it will always have the form:
-            a*e^(j*phase).
-        length: The length of the matrix (corresponding to a physical
-            implementation of the layer). This is used to find the coordinates
-            of each neuron.
-        neuron_length: The length of one physical neuron (length/size).
-        weights: torch.nn.Parameter object containing a size x size
-            matrix with the complex valued weights.
+            e^(j*phase).
+        x_coordinates: The x coordinates of all neurons. Must be a torch
+            tensor of shape (n_size, ).
+        y_coordinates: The x coordinates of all neurons. Must be a torch
+            tensor of shape (n_size, ).
         z_coordinate: The z coordinated of the layer implemented (corresponding
             to the physical implementation). Keep in mind that all neurons will
             have this z coordinates as their position.
-        neuron_coordinates: Tensor of shape (size, size, 3) representing the
-            position of all neurons (x, y, z). See utils.find_coordinate_matrix
-            for more information.
-        neuron_coordinates_next: Tensor of shape (size, size, 3) representing
-            the position of all neurons (x, y, z) in the next layer.
-            See utils.find_coordinate_matrix for more information.
+        weights: torch.nn.Parameter object containing a size x size
+            matrix with the phase valued elements.
         z_next: The z coordinate of the next layer (used to
-            find the values of the optical modes at the next layer).
+            find the complex amplitude map at the next layer).
         wavelength: The wavelength of light.
     """
 
     def __init__(
         self,
-        size: int,
-        length: float,
+        n_size: int,
+        x_coordinates: torch.Tensor,
+        y_coordinates: torch.Tensor,
         z_coordinate: float,
         z_next: float,
         wavelength: float,
     ) -> None:
         super().__init__()
-        self.size = size
-        self.length = length
-        self.neuron_length = self.length / self.size
+        self.n_size = n_size
+        self.x_coordinates = self.y_coordinates
+        self.y_coordinates = self.y_coordinates
         self.z_coordinate = z_coordinate
         self.z_next = z_next
 
         # initialize a size x size matrix and instantiate all elements as
         # Parameters
         self.weights = torch.nn.Parameter(
-            torch.randn(size=(size, size), dtype=torch.cfloat)
-        )
-
-        # the position of each neuron
-        self.neuron_coordinates = torch.from_numpy(
-            find_coordinate_matrix(
-                n_size=self.size,
-                n_length=self.length,
-                z_coordinate=self.z_coordinate,
-            )
-        )
-
-        # the position of each neuron in the next layer
-        self.neuron_coordinates_next = torch.from_numpy(
-            find_coordinate_matrix(
-                n_size=self.size,
-                n_length=self.length,
-                z_coordinate=self.z_next,
-            )
+            torch.randn(size=(n_size, n_size), dtype=torch.float64)
         )
 
         # the wavelength of light
         self.wavelength = wavelength
 
-    def _clip_weights(self) -> torch.tensor:
-        # always clip the weights to have an absolute values smaller than 1
-        # keep only the absolute values who are greater than 1
-        new_amplitude_weights = torch.clamp(torch.abs(self.weights), min=1)
-
-        # divide the tensors element wise to get rid of all the weights with
-        # amplitude larger than
-        new_amplitude_weights = torch.div(self.weights, new_amplitude_weights)
-
-        # return the new amplitude weights
-        return new_amplitude_weights
-
-    def _get_amplitude_map(self) -> np.ndarray:
-        """Gets the amplitude map of the neurons weights.
-
-        Returns:
-            Numpy arrays of shape (size, size) containing the
-            absolute value of each weight.
-        """
-        # always clip the weights before plotting them
-        clipped_weights = self._clip_weights()
-
-        # copy the weights to a numpy array
-        numpy_weights = clipped_weights.detach().cpu().numpy()
-
-        return np.absolute(numpy_weights)
 
     def _get_phase_map(self) -> np.ndarray:
         """Gets the phase map of the neurons weights.
@@ -131,42 +96,14 @@ class DiffractiveLayer(torch.nn.Module):
         # copy the weights to a numpy array
         numpy_weights = self.weights.detach().cpu().numpy()
 
-        return np.angle(numpy_weights)
+        # get all the phases between 0 and 2pi
+        phase_map = numpy_weights % (2 * np.pi)
 
-    def plot_amplitude_map(self) -> None:
-        """Plots the amplitude map. ssss"""
-        # if the number of neurons is greater than 15, the labels get
-        # too crowded, so show only 15 values.
-        if self.size < 15:
-            x_ticks = (
-                np.arange(start=0, stop=self.size) + 0.5
-            ) * self.neuron_length
-            y_ticks = (
-                np.arange(start=0, stop=self.size) + 0.5
-            ) * self.neuron_length
+        # transfer to [-pi, pi] interval
+        phase_map = phase_map - np.pi
 
-        else:
-            x_ticks = (
-                np.linspace(start=0, stop=self.size, num=15) + 0.5
-            ) * self.neuron_length
-            y_ticks = (
-                np.linspace(start=0, stop=self.size, num=15) + 0.5
-            ) * self.neuron_length
+        return phase_map
 
-        # show the figure
-        plt.figure(figsize=(12, 8))
-        plt.title("Amplitude Map")
-        plt.xlabel("x-position (m)")
-        plt.ylabel("y-position (m)")
-        plt.xticks(x_ticks)
-        plt.yticks(y_ticks)
-        plt.imshow(
-            X=self._get_amplitude_map(),
-            origin="lower",
-            extent=[0, self.length, 0, self.length],
-        )
-        plt.colorbar()
-        plt.show()
 
     def plot_phase_map(self) -> None:
         """Plots the phase map."""
