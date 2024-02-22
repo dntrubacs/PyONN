@@ -3,7 +3,7 @@ import numpy as np
 
 
 def find_coordinate_matrix(
-    n_size: int, n_length: float, z_coordinate: float
+        n_size: int, n_length: float, z_coordinate: float
 ) -> np.ndarray:
     """Find the position coordinates of elements in a physical representation
     of an n_size x n_size matrix located at position z.
@@ -43,11 +43,11 @@ def find_coordinate_matrix(
 
 
 def create_square_grid_pattern(
-    center_coordinates: np.ndarray,
-    pixel_length: float,
-    pixel_number: int,
-    pixel_separation: float,
-    grid_z_coordinate: float,
+        center_coordinates: np.ndarray,
+        pixel_length: float,
+        pixel_number: int,
+        pixel_separation: float,
+        grid_z_coordinate: float,
 ) -> tuple:
     """Finds the coordinates of all pixels from a square grid.
 
@@ -88,43 +88,43 @@ def create_square_grid_pattern(
     # the center square will have center_coordinates for ood pixel number
     if pixel_number % 2 == 1:
         x_coordinates = (
-            distance
-            * np.arange(
-                start=-int(pixel_number / 2),
-                stop=int(pixel_number / 2) + 1,
-                step=1,
-            )
-            + center_coordinates[0]
+                distance
+                * np.arange(
+            start=-int(pixel_number / 2),
+            stop=int(pixel_number / 2) + 1,
+            step=1,
+        )
+                + center_coordinates[0]
         )
         y_coordinates = (
-            distance
-            * np.arange(
-                start=-int(pixel_number / 2),
-                stop=int(pixel_number / 2) + 1,
-                step=1,
-            )
-            + center_coordinates[1]
+                distance
+                * np.arange(
+            start=-int(pixel_number / 2),
+            stop=int(pixel_number / 2) + 1,
+            step=1,
+        )
+                + center_coordinates[1]
         )
 
     # center_coordinates will be between for ood pixel number
     else:
         x_coordinates = (
-            distance
-            * np.arange(
-                start=-pixel_number / 2 + 0.5,
-                stop=pixel_number / 2 + 0.5,
-                step=1,
-            )
-            + center_coordinates[0]
+                distance
+                * np.arange(
+            start=-pixel_number / 2 + 0.5,
+            stop=pixel_number / 2 + 0.5,
+            step=1,
+        )
+                + center_coordinates[0]
         )
         y_coordinates = (
-            distance
-            * np.arange(
-                start=-pixel_number / 2 + 0.5,
-                stop=pixel_number / 2 + 0.5,
-                step=1,
-            )
-            + center_coordinates[1]
+                distance
+                * np.arange(
+            start=-pixel_number / 2 + 0.5,
+            stop=pixel_number / 2 + 0.5,
+            step=1,
+        )
+                + center_coordinates[1]
         )
 
     # go through each pixel
@@ -189,6 +189,48 @@ def circ_function(x: np.ndarray) -> np.ndarray:
 
     # return the result
     return circ_result
+
+
+def plot_complex_amplitude_map(complex_amplitude_map: np.ndarray,
+                               x_coordinates: np.ndarray,
+                               y_coordinates: np.ndarray) -> None:
+    """ Plots the amplitude and phase map for a complex amplitude map.
+
+    Args:
+        complex_amplitude_map: Numpy array representing the complex valued
+            elements (amplitude and phase). Must have shape
+            (n_pixels, n_pixels) where n_pixels**2 is the number of elements
+            in the map.
+        x_coordinates: Numpy array representing the x coordinates of all
+             pixels. Must be of shape (n_pixels, ).
+        y_coordinates: Numpy array representing the y coordinates of all
+             pixels. Must be of shape (n_pixels, ).
+    """
+    # generate the mesh grid necessary for plotting
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
+
+    # get the amplitude and phase maps
+    amplitude_map = np.abs(complex_amplitude_map)
+    phase_map = np.angle(complex_amplitude_map)
+
+    # create the figure
+    figure, axis = plt.subplots(1, 2, figsize=(20, 8))
+
+    # plot the intensity map
+    axis[0].set_title('Amplitude Map')
+    amplitude_map = axis[0].pcolormesh(
+        x_mesh, y_mesh, amplitude_map, cmap="jet")
+    axis[0].set_xlabel("$x$ [mm]")
+    axis[0].set_ylabel("$y$ [mm]")
+    figure.colorbar(mappable=amplitude_map)
+
+    # plot the phase map
+    axis[1].set_title('Phase Map')
+    phase_map = axis[1].pcolormesh(x_mesh, y_mesh, phase_map, cmap="inferno")
+    axis[1].set_xlabel("$x$ [mm]")
+    axis[1].set_ylabel("$y$ [mm]")
+    figure.colorbar(mappable=phase_map)
+    plt.show()
 
 
 if __name__ == "__main__":
