@@ -182,7 +182,7 @@ def plot_real_maps(
 
     # plot the phase map
     axis[1].set_title(phase_map_title)
-    b = axis[1].pcolormesh(x_mesh, y_mesh, phase_map, cmap="jet")
+    b = axis[1].pcolormesh(x_mesh, y_mesh, phase_map, cmap="inferno")
     axis[1].set_xlabel("$x$ [mm]")
     axis[1].set_ylabel("$y$ [mm]")
     figure.colorbar(mappable=b)

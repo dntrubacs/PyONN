@@ -22,8 +22,8 @@ phase change material, 2023. DOI:10 . 48550 / ARXIV. 2305 . 11196.
 """
 import numpy as np
 import torch
-from angular_spectrum_propagation_method import propagate_complex_amplitude_map
-from utils import plot_complex_amplitude_map
+from pyonn.angular_spectrum_propagation_method import propagate_complex_amplitude_map
+from pyonn.utils import plot_complex_amplitude_map
 
 
 class DiffractiveLayer(torch.nn.Module):
