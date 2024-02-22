@@ -1,3 +1,4 @@
+# flake8: noqa
 """
 Created by Daniel-Iosif Trubacs on 21 February 2024 for the UoS Integrated
 Nanophotonics Group. The purpose of this module is to create a diffractive
@@ -85,7 +86,6 @@ class DiffractiveLayer(torch.nn.Module):
         # the wavelength of light
         self.wavelength = wavelength
 
-
     def _get_phase_map(self) -> np.ndarray:
         """Gets the phase map of the neurons weights.
 
@@ -103,7 +103,6 @@ class DiffractiveLayer(torch.nn.Module):
         phase_map = phase_map - np.pi
 
         return phase_map
-
 
     def plot_phase_map(self) -> None:
         """Plots the phase map."""
