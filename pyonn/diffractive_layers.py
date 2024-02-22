@@ -76,15 +76,16 @@ class DiffractiveLayer(torch.nn.Module):
         self.z_next = z_next
 
         # initialize a size x size matrix and instantiate all elements as
-        # Parameters
+        # Parameters. The amplitude must be always smaller than 1.
+        weights = torch.randn(size=(n_size, n_size), dtype=torch.complex64)
         self.weights = torch.nn.Parameter(
-            torch.randn(size=(n_size, n_size), dtype=torch.complex64)
+            torch.divide(weights, torch.max(torch.abs(weights)))
         )
 
         # the wavelength of light
         self.wavelength = wavelength
 
-    def _clip_weights(self) -> torch.tensor:
+    def _clip_weights(self) -> torch.Tensor:
         # always clip the weights to have an absolute values smaller than 1
         # keep only the absolute values who are greater than 1
         new_amplitude_weights = torch.clamp(torch.abs(self.weights), min=1)
@@ -96,9 +97,8 @@ class DiffractiveLayer(torch.nn.Module):
         # return the new amplitude weights
         return new_amplitude_weights
 
-
     def plot_weights_map(self) -> None:
-        """ Plots the intensity and phase map of the weights."""
+        """Plots the intensity and phase map of the weights."""
         # always clip the weights
         clipped_weights = self._clip_weights()
 
@@ -106,9 +106,42 @@ class DiffractiveLayer(torch.nn.Module):
         numpy_weights = clipped_weights.detach().cpu().numpy()
 
         # plot the amplitude3 and phase map
-        plot_complex_amplitude_map(complex_amplitude_map=numpy_weights,
-                                   x_coordinates=self.x_coordinates,
-                                   y_coordinates=self.y_coordinates)
+        plot_complex_amplitude_map(
+            complex_amplitude_map=numpy_weights,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.y_coordinates,
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward model based on the angular spectrum propagation method.
+
+        Args:
+            x: Tensor representing the values of the output of the layer before
+                at the given points where the weights are (has to be the same
+                size as the weights). All values must represent a complex
+                amplitude.
+
+        Returns:
+            Tensor representing the output of this layer at the given points
+            of the next layer. The output is simply the complex map measured at
+            the next layer.
+        """
+        # the transmission matrix containing the weights
+        transmission_matrix = self._clip_weights()
+
+        # multiply each complex amplitude by the value of a neuron
+        complex_amplitude_map = torch.mul(transmission_matrix, x)
+
+        # find the propagated complex amplitude map at z
+        propagated_complex_amplitude_map = propagate_complex_amplitude_map(
+            complex_amplitude_map=complex_amplitude_map,
+            x_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            distance=self.z_next - self.z_coordinate,
+        )
+
+        # return the propagated complex amplitude map
+        return propagated_complex_amplitude_map
 
 
 if __name__ == "__main__":
@@ -133,9 +166,12 @@ if __name__ == "__main__":
     # used only for testing and debugging
     # try the forward pass
     debug_layer = DiffractiveLayer(
-        n_size=100, x_coordinates=debug_x_coordinates,
-        y_coordinates=debug_y_coordinates, z_coordinate=0.0,
-        z_next=1.0, wavelength=1.55E-6
+        n_size=100,
+        x_coordinates=debug_x_coordinates,
+        y_coordinates=debug_y_coordinates,
+        z_coordinate=0.0,
+        z_next=1.0,
+        wavelength=1.55e-6,
     )
 
     # plot the amplitude and phase map
