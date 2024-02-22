@@ -182,7 +182,7 @@ def plot_real_maps(
 
     # plot the phase map
     axis[1].set_title(phase_map_title)
-    b = axis[1].pcolormesh(x_mesh, y_mesh, phase_map, cmap="inferno")
+    b = axis[1].pcolormesh(x_mesh, y_mesh, phase_map, cmap="jet")
     axis[1].set_xlabel("$x$ [mm]")
     axis[1].set_ylabel("$y$ [mm]")
     figure.colorbar(mappable=b)
@@ -230,10 +230,10 @@ if __name__ == "__main__":
     debug_map = debug_map * np.exp(1j * amorphous_phase_change)
     print(square_grid_pattern[1][5], square_grid_pattern[1][95], ">>>>")
     # greate a grid of crystalline phase change
-    for i in range(9):
+    for i in range(7):
         # set the grid on both x and y
-        debug_map[5:95, (i + 1) * 10] = np.exp(1j * crystalline_phase_change)
-        debug_map[(i + 1) * 10, 5:95] = np.exp(1j * crystalline_phase_change)
+        debug_map[25:75, (i + 2) * 10] = np.exp(1j * crystalline_phase_change)
+        # debug_map[(i + 1) * 10, 5:95] = np.exp(1j * crystalline_phase_change)
 
     # move from numpy to torch tensors
     debug_map = torch.from_numpy(debug_map)
@@ -256,9 +256,9 @@ if __name__ == "__main__":
             complex_amplitude_map=debug_map,
             x_coordinates=debug_x_coordinates,
             wavelength=debug_wavelength,
-            distance=resized_dist,
-            folder_name="results/grid/scalar",
-            data_name=f"propagated map at distance {dist} um",
+            distance=resized_dist
+            # folder_name="results/grid/scalar",
+            # data_name=f"propagated map at distance {dist} um",
         )
 
         plot_real_maps(

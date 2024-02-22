@@ -164,17 +164,17 @@ if __name__ == "__main__":
     # the file with the lumerical raw data
     os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
     fdtd_file = (
-        "results/grid/fdtd/Lumerical raw data/intensity"
-        " map at 50 um distance.txt"
+        "results/multiple_slits/fdtd/Lumerical raw data/intensity map at 10 "
+        "um distance.txt"
     )
 
     # process the data
     debug_x, debug_y, debug_intensity = process_ftd_data(
         fdtd_path=fdtd_file,
-        max_x_value=3.96e-5,
-        max_y_value=3.96e-5,
-        folder_name="results/grid/fdtd",
-        data_name=f"propagated map at distance {50} um",
+        max_x_value=4e-5,
+        max_y_value=4e-5,
+        folder_name="results/multiple_slits/fdtd",
+        data_name=f"propagated map at distance {10} um",
     )
 
     plt.pcolormesh(debug_x, debug_y, debug_intensity, cmap="jet")

@@ -7,11 +7,14 @@ import cv2 as cv
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 
 # distance at which the intensity map has been measured
-distance = 50
+distance = 5
+
+# folder in which the data is
+folder = "results/grid"
 
 # the folder where the data with results from scalar simulation
 scalar_results = (
-    f"results/grid/scalar/propagated map at " f"distance {distance} um"
+    f"{folder}/scalar/propagated map at " f"distance {distance} um"
 )
 
 # load the data for scalar simulation
@@ -30,9 +33,7 @@ scalar_intensity_map = np.square(np.abs(scalar_complex_amplitude_map))
 
 
 # the folder where the data with results from fdtd simulation
-fdtd_results = (
-    f"results/grid/fdtd/propagated map at distance " f"{distance} um"
-)
+fdtd_results = f"{folder}/fdtd/propagated map at distance " f"{distance} um"
 
 # load the data for scalar simulation
 fdtd_x_mesh = np.load(os.path.join(fdtd_results, "x_mesh"), allow_pickle=True)
@@ -109,7 +110,5 @@ axis[1][1].set_ylabel("$y$ [mm]")
 figure.colorbar(mappable=error_map)
 
 
-plt.savefig(
-    f"results/grid/pictures of comparison/distance " f"{distance} um.png"
-)
+plt.savefig(f"{folder}/pictures of comparison/distance {distance} um.png")
 plt.show()
