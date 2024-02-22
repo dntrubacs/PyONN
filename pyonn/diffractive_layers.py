@@ -236,6 +236,70 @@ class StaticDiffractiveLayer:
         return propagated_complex_amplitude_map
 
 
+class InputDiffractiveLayer:
+    """Diffractive Layer but with a given complex amplitude map.
+
+    For a full documentation about attributes see DiffractiveLayer class.
+
+     Attributes:
+        complex_amplitude_map: Given torch.Tensor.
+    """
+
+    def __init__(
+        self,
+        n_size: int,
+        x_coordinates: np.ndarray,
+        y_coordinates: np.ndarray,
+        z_coordinate: float,
+        z_next: float,
+        complex_amplitude_map: torch.Tensor,
+        wavelength: float,
+    ) -> None:
+        self.n_size = n_size
+        self.x_coordinates = x_coordinates
+        self.y_coordinates = y_coordinates
+        self.z_coordinate = z_coordinate
+        self.z_next = z_next
+
+        # initialize a size x size matrix and instantiate all elements as
+        # Parameters. The amplitude must be always smaller than 1.
+        self.complex_amplitude_map = complex_amplitude_map
+
+        # the wavelength of light
+        self.wavelength = wavelength
+
+    def plot_complex_amplitude_map(self) -> None:
+        """Plots the intensity and phase map of the weights."""
+        # make a numpy copy of complex amplitude map
+        np_map = self.complex_amplitude_map.detach().cpu().numpy()
+
+        # plot the amplitude3 and phase map
+        plot_complex_amplitude_map(
+            complex_amplitude_map=np_map,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.y_coordinates,
+        )
+
+    def forward(self) -> torch.Tensor:
+        """Forward model based on the angular spectrum propagation method.
+
+        Returns:
+            Tensor representing the output of this layer at the given points
+            of the next layer. The output is simply the complex map measured at
+            the next layer.
+        """
+        # find the propagated complex amplitude map at z
+        propagated_complex_amplitude_map = propagate_complex_amplitude_map(
+            complex_amplitude_map=self.complex_amplitude_map,
+            x_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            distance=self.z_next - self.z_coordinate,
+        )
+
+        # return the propagated complex amplitude map
+        return propagated_complex_amplitude_map
+
+
 if __name__ == "__main__":
     from utils import create_square_grid_pattern
 
@@ -257,15 +321,15 @@ if __name__ == "__main__":
     # meshgrid)
     # used only for testing and debugging
     # try the forward pass
-    debug_layer = StaticDiffractiveLayer(
+    debug_layer = InputDiffractiveLayer(
         n_size=100,
         x_coordinates=debug_x_coordinates,
         y_coordinates=debug_y_coordinates,
         z_coordinate=0.0,
         z_next=1.0,
-        weights=torch.ones(size=(100, 100)),
+        complex_amplitude_map=torch.ones(size=(100, 100)),
         wavelength=1.55e-6,
     )
 
     # plot the amplitude and phase map
-    debug_layer.plot_weights_map()
+    debug_layer.plot_complex_amplitude_map()
