@@ -8,10 +8,11 @@ Sb2Se3 with a written crystalline Sb2Se3 slit.
 
 from pyonn.utils import create_square_grid_pattern
 from pyonn.diffraction_equations import find_phase_change
-from pyonn.diffractive_layers import InputDiffractiveLayer, DiffractiveLayer
+from pyonn.diffractive_layers import InputDiffractiveLayer, DetectorLayer
 from pyonn.angular_spectrum_propagation_method import plot_real_maps
 import numpy as np
 import torch
+from matplotlib import pyplot as plt
 
 # wavelength of light
 wavelength = 1.55e-6
@@ -61,43 +62,61 @@ for dist in [0.1, 1, 2, 5, 10, 20, 50]:
 
     # create the InputDiffractiveLayer
     single_slit_input = InputDiffractiveLayer(
-            n_size=120, x_coordinates=x_coordinates,
-            y_coordinates=x_coordinates,
-            z_coordinate=0.0, z_next=resized_dist,
-            complex_amplitude_map=initial_phase_map,
-            wavelength=1.55E-6
+        n_size=120,
+        x_coordinates=x_coordinates,
+        y_coordinates=x_coordinates,
+        z_coordinate=0.0,
+        z_next=resized_dist,
+        weights_static=initial_phase_map,
+        wavelength=1.55e-6,
     )
 
-    # create a DiffractiveLayer with random weights
-    diffractive_layer = DiffractiveLayer(
-        n_size=120, x_coordinates=x_coordinates,
+    # create a Detector Layer
+    detector_layer = DetectorLayer(
+        n_size=120,
+        x_coordinates=x_coordinates,
         y_coordinates=x_coordinates,
-        z_coordinate=resized_dist, z_next=resized_dist,
-        wavelength=1.55E-6
+        z_coordinate=resized_dist,
     )
 
     # do the forward pass (propagate the light)
     propagated_map = single_slit_input.forward()
+
+    # do the forward pass for the detector layer
+    d = detector_layer.forward(x=propagated_map)
+    detector_layer.plot_intensity_map()
+
+    propagated_map_np = propagated_map.detach().cpu().numpy()
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
+
+    # create the figure
+    figure, axis = plt.subplots(1, 2, figsize=(20, 8))
+
+    # plot the intensity map
+    axis[0].set_title(f"Input Layer Output at: {round(dist, 3)}")
+    a = axis[0].pcolormesh(
+        x_mesh, y_mesh, np.square(np.abs(propagated_map_np)), cmap="jet"
+    )
+    axis[0].set_xlabel("$x$ [m]")
+    axis[0].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=a)
+
+    # plot the phase map
+    axis[1].set_title("Phase Map")
+    b = axis[1].pcolormesh(
+        x_mesh, y_mesh, np.angle(propagated_map_np), cmap="inferno"
+    )
+    axis[1].set_xlabel("$x$ [m]")
+    axis[1].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=b)
+    plt.show()
 
     # plot the propagated real maps
     plot_real_maps(
         complex_amplitude_map=propagated_map,
         x_coordinates=x_coordinates,
         intensity_map_title=f"Propagated intensity map at: "
-                            f"{round(dist, 3)} $\mu$ m",  # noqa W605
+        f"{round(dist, 3)} $\mu$ m",  # noqa W605
         phase_map_title=f"Propagated phase map at: "
-                        f"{round(dist, 3)} $\mu$ m",  # noqa W605
-    )
-
-    diffractive_layer.plot_weights_map()
-    output = diffractive_layer.forward(x=propagated_map)
-
-    # plot the propagated real maps
-    plot_real_maps(
-            complex_amplitude_map=output,
-            x_coordinates=x_coordinates,
-            intensity_map_title=f"Output at: "
-            f"{round(dist, 3)} $\mu$ m",  # noqa W605
-            phase_map_title=f"Output at: "
-            f"{round(dist, 3)} $\mu$ m",  # noqa W605
+        f"{round(dist, 3)} $\mu$ m",  # noqa W605
     )

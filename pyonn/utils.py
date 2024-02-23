@@ -209,7 +209,7 @@ def plot_complex_amplitude_map(
              pixels. Must be of shape (n_pixels, ).
     """
     # generate the mesh grid necessary for plotting
-    x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
 
     # get the amplitude and phase maps
     amplitude_map = np.abs(complex_amplitude_map)

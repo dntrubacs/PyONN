@@ -146,6 +146,7 @@ def plot_real_maps(
     x_coordinates: np.ndarray,
     intensity_map_title: str = "Intensity Map",
     phase_map_title: str = "Phase Map",
+    normalized: bool = False,
 ) -> None:
     """Plots the intensity and phase maps.
 
@@ -161,13 +162,14 @@ def plot_real_maps(
             map figure.
         phase_map_title: String representing the title of the phase
             map figure.
+        normalized: Whether to normalize or not the intensity data
     """
     # generate the mesh grid necessary for plotting
     x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
 
     # get the intensity and phase maps
     intensity_map, phase_map = find_real_maps(
-        complex_amplitude_map=complex_amplitude_map, normalized=True
+        complex_amplitude_map=complex_amplitude_map, normalized=normalized
     )
 
     # create the figure
@@ -176,15 +178,15 @@ def plot_real_maps(
     # plot the intensity map
     axis[0].set_title(intensity_map_title)
     a = axis[0].pcolormesh(x_mesh, y_mesh, intensity_map, cmap="jet")
-    axis[0].set_xlabel("$x$ [mm]")
-    axis[0].set_ylabel("$y$ [mm]")
+    axis[0].set_xlabel("$x$ [m]")
+    axis[0].set_ylabel("$y$ [m]")
     figure.colorbar(mappable=a)
 
     # plot the phase map
     axis[1].set_title(phase_map_title)
     b = axis[1].pcolormesh(x_mesh, y_mesh, phase_map, cmap="inferno")
-    axis[1].set_xlabel("$x$ [mm]")
-    axis[1].set_ylabel("$y$ [mm]")
+    axis[1].set_xlabel("$x$ [m]")
+    axis[1].set_ylabel("$y$ [m]")
     figure.colorbar(mappable=b)
     plt.show()
 
