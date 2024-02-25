@@ -8,6 +8,9 @@
 # ignore all txt files
 *.txt
 
+# ignore the data folder (used only to keep local data)
+data*
+
 # ignore the test script
 test.*
 
