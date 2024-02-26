@@ -101,6 +101,58 @@ def generate_optical_label(label: int) -> np.ndarray:
     return processed_label
 
 
+def convert_optical_label(optical_label: np.ndarray) -> tuple:
+    """Converts an optical label into a normal label.
+
+    Args:
+        optical_label: Numpy array representing the optical label. The label
+            represent  a detector of size (120, 120) where only a region is
+            'lit up' (1 values). Must be made with generate_optical_label
+
+    Returns:
+        The value with the maximum intensity measured in the activated regions
+        and all the other values normalized to all the intensity in the
+        region.
+    """
+    # all the detector region intensity values
+    detector_regions = np.zeros(shape=(10,))
+
+    # get the region intensity average for the 0 label
+    detector_regions[0] = np.mean(optical_label[10:30, 10:30])
+
+    # get the region intensity average for the 1 label
+    detector_regions[1] = np.mean(optical_label[10:30, 50:70])
+
+    # get the region intensity average for the 2 label
+    detector_regions[2] = np.mean(optical_label[10:30, 90:110])
+
+    # get the region intensity average for the 3 label
+    detector_regions[3] = np.mean(optical_label[50:70, 5:25])
+
+    # get the region intensity average for the 4 label
+    detector_regions[4] = np.mean(optical_label[50:70, 35:55])
+
+    # get the region intensity average for the 5 label
+    detector_regions[5] = np.mean(optical_label[50:70, 65:85])
+
+    # get the region intensity average for the 6 label
+    detector_regions[6] = np.mean(optical_label[50:70, 95:115])
+
+    # get the region intensity average for the 7 label
+    detector_regions[7] = np.mean(optical_label[90:110, 10:30])
+
+    # get the region intensity average for the 8 label
+    detector_regions[8] = np.mean(optical_label[90:110, 50:70])
+
+    # get the region intensity average for the 9 label
+    detector_regions[9] = np.mean(optical_label[90:110, 90:110])
+
+    return (
+        np.argmax(detector_regions),
+        detector_regions / np.sum(detector_regions),
+    )
+
+
 def create_optical_labels(
     labels_path: str, saved_label_path: Optional[str] = None
 ) -> np.ndarray:
@@ -137,6 +189,8 @@ def create_optical_labels(
 
 
 if __name__ == "__main__":
+    from matplotlib import pyplot as plt
+
     # the directory in which the data
     os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN/data")
 
@@ -145,7 +199,14 @@ if __name__ == "__main__":
     labels_file = "mnist_raw_data/train-labels.idx1-ubyte"
 
     # save the labels file
-    create_optical_labels(
+    a = create_optical_labels(
         labels_path=labels_file,
         saved_label_path="mnist_processed_data/train_labels",
     )
+    for i in range(100):
+        label, label_list = convert_optical_label(optical_label=a[i])
+        if label == 9:
+            print(label_list)
+            plt.title(str(label))
+            plt.imshow(a[i])
+            plt.show()

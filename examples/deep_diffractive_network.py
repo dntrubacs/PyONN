@@ -11,16 +11,24 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os
 from pyonn.utils import create_square_grid_pattern
+from pyonn_data.datasets import OpticalImageDataset
 import torch
+from torch.utils.data import DataLoader
 
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN/data")
 train_images = np.load("mnist_processed_data/train_images", allow_pickle=True)
 train_labels = np.load("mnist_processed_data/train_labels", allow_pickle=True)
 
-# convert the data to torch tensors
-train_images = torch.from_numpy(train_images)
-train_labels = torch.from_numpy(train_labels)
+# create an optical image dataset
+train_dataset = OpticalImageDataset(
+    optical_images=train_images, optical_labels=train_labels
+)
+
+# create a data loader for the training data
+train_loader = DataLoader(
+    dataset=train_dataset, batch_size=160, shuffle=True, num_workers=0
+)
 
 
 # wavelength of light
@@ -79,43 +87,38 @@ class DiffractiveNN(torch.nn.Module):
 # build the model
 model = DiffractiveNN()
 
-# try a forward pass
-# test = model(train_images[0:5])
-# print(test.shape)
 
 # loss and optimizer
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-n_epochs = 10
+n_epochs = 100
 for epoch in range(n_epochs):
-    # a list of all losses
-    loss = []
 
-    for i in range(train_images.shape[0]):
-        output = model(train_images[i])
-        loss = criterion(output, train_labels[i])
+    for i, (images, labels) in enumerate(train_loader):
+        # forward pass
+        output = model(images)
+        loss = criterion(output, labels)
 
+        # find the gradients and optimize
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         # copy the output and show it as plt
-        if i % 1000 == 0:
+        if i % 100 == 0:
             print("epoch:", epoch, "i: ", i, " loss: ", loss)
-            np_output = output
-            np_output = np_output.detach().cpu().numpy()
-            plot_label = train_labels[i].detach().cpu().numpy()
-            plot_data = train_images[i].detach().cpu().numpy()
-            plt.figure()
-            plt.title(f"Image {i}")
-            plt.imshow(plot_data)
-            plt.colorbar()
-            plt.show()
+            np_predicted = output.detach().cpu().numpy()
+            np_labels = labels.detach().cpu().numpy()
+
+            plot_label = np_labels[0]
+            plot_predicted = np_predicted[0]
 
             plt.figure(figsize=(8, 4))
-            plt.subplot(121, title=f"Prediction after epoch: {epoch}")
-            plt.imshow(np_output, origin="lower")
+            plt.subplot(
+                121, title=f"Prediction after epoch: {epoch}, " f"i: {i}"
+            )
+            plt.imshow(plot_predicted, origin="lower")
             plt.colorbar()
             plt.subplot(122, title="Label")
             plt.imshow(plot_label, origin="lower")
