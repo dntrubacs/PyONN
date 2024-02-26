@@ -13,6 +13,9 @@ import torch
 import os
 import pickle
 
+# Device configuration (used always fore very torch tensor declared)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def propagate_complex_amplitude_map(
     complex_amplitude_map: torch.Tensor,
@@ -78,8 +81,9 @@ def propagate_complex_amplitude_map(
     # simply take the sqrt of the square
     sqrt_term = (2 * torch.pi / wavelength) * torch.sqrt(squared_term)
 
-    # find the transfer function term
+    # find the transfer function term and move it to cuda if available
     transfer_term = torch.exp(1j * distance * sqrt_term)
+    transfer_term = transfer_term.to(device)
 
     # propagated complex amplitude map
     propagated_complex_amplitude_map = torch.fft.ifft2(u_0 * transfer_term)
@@ -239,6 +243,9 @@ if __name__ == "__main__":
 
     # move from numpy to torch tensors
     debug_map = torch.from_numpy(debug_map)
+
+    # move the tensor to use cuda if available
+    debug_map = debug_map.to(device)
 
     # show the initial phase map
     plot_real_maps(

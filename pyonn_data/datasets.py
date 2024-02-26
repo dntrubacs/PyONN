@@ -5,6 +5,9 @@ import numpy as np
 from torch.utils.data import Dataset
 import torch
 
+# Device configuration (used always fore very torch tensor declared)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class OpticalImageDataset(Dataset):
     """Optical image dataset for training deep diffractive neural network.
@@ -27,6 +30,10 @@ class OpticalImageDataset(Dataset):
         # convert the numpy array to torch tensors
         self.optical_images = torch.from_numpy(optical_images)
         self.optical_labels = torch.from_numpy(optical_labels)
+
+        # always use cuda if available
+        self.optical_images = self.optical_images.to(device)
+        self.optical_labels = self.optical_labels.to(device)
 
     # get item method
     def __getitem__(self, index) -> tuple:

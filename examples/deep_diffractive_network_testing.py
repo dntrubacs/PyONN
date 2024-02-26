@@ -1,7 +1,7 @@
-""" Created by Daniel-Iosif Trubacs 0n 25 February 2024. The purpose of this
-module is tp show an example of a deep diffractive neural network trained
-on the MNIST dataset."""
-
+"""
+Created by Daniel-Iosif Trubacs on 26 February 2024. The purpose of this
+module is to test already trained models.
+"""
 from pyonn.diffractive_layers import (
     InputDiffractiveLayer,
     DetectorLayer,
@@ -14,7 +14,6 @@ from pyonn.utils import create_square_grid_pattern
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn_data.processing import convert_optical_label
 import torch
-from torch.utils.data import DataLoader
 
 
 # Device configuration (used always fore very torch tensor declared)
@@ -28,19 +27,25 @@ train_images = np.load(
 train_labels = np.load(
     file="data/mnist_processed_data/train_labels", allow_pickle=True
 )
+test_images = np.load(
+    file="data/mnist_processed_data/test_images", allow_pickle=True
+)
+test_labels = np.load(
+    file="data/mnist_processed_data/test_labels", allow_pickle=True
+)
 
 # create an optical image dataset
 train_dataset = OpticalImageDataset(
     optical_images=train_images, optical_labels=train_labels
 )
 
-# number of samples in the dataset
-n_samples = train_dataset.__len__()
-
-# create a data loader for the training data
-train_loader = DataLoader(
-    dataset=train_dataset, batch_size=32, shuffle=True, num_workers=0
+test_dataset = OpticalImageDataset(
+    optical_images=test_images, optical_labels=test_labels
 )
+
+# number of samples in the dataset
+n_samples_train = train_dataset.__len__()
+n_samples_test = test_dataset.__len__()
 
 # wavelength of light
 wavelength = 1.55e-6
@@ -113,82 +118,57 @@ class DiffractiveNN(torch.nn.Module):
         return x
 
 
-# build the model and move to cuda if available
+# load the trained weights
 model = DiffractiveNN().to(device)
+model.load_state_dict(torch.load("dnn_models/model_0"))
+
+# n correct for test and train dataset
+n_correct_train = 0
+n_correct_test = 0
+
+"""
+# find the accuracy for the training data
+for i in range(n_samples_train):
+    train_image, train_label = train_dataset[i]
+    prediction = model(train_image)
+    np_prediction = prediction.detach().cpu().numpy()
+    np_label = train_label.detach().cpu().numpy()
+    real_prediction = convert_optical_label(
+           optical_label=np_prediction
+    )[0]
+    real_label = convert_optical_label(
+      optical_label=np_label
+    )[0]
+    if real_prediction == real_label:
+        n_correct_train += 1
+    if i % 1000 == 0 and i > 1:
+        print(i, n_correct_train, n_correct_train/i*100)
+"""
+# find the accuracy for the testing data
+for i in range(n_samples_test):
+    test_image, test_label = test_dataset[i]
+    prediction = model(test_image)
+    np_prediction = prediction.detach().cpu().numpy()
+    np_label = test_label.detach().cpu().numpy()
+    real_prediction = convert_optical_label(optical_label=np_prediction)[0]
+    real_label = convert_optical_label(optical_label=np_label)[0]
+    if real_prediction == real_label:
+        n_correct_test += 1
+
+    if i % 1000 == 0 and i > 1:
+        print(i, n_correct_test, n_correct_test / i * 100)
+
+# print(f'train accuracy: {n_correct_train/n_samples_train*100} %')
+print(f"test accuracy: {n_correct_test/n_samples_test*100} %")
 
 
-# loss and optimizer
-criterion = torch.nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-# number of epochs
-n_epochs = 20
-
-# a list of all losses after an epoch
-losses = []
-
-# a list of accuracies predicted after an epoch
-accuracies = []
-
-for epoch in range(n_epochs):
-
-    # number of correct predictions
-    n_correct = 0
-
-    # a list of all losses calculated after a batch size training
-    batch_losses = []
-
-    for i, (images, labels) in enumerate(train_loader):
-        # forward pass
-        output = model(images)
-        loss = criterion(output, labels)
-
-        # find the gradients and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        # move from torch to numpy to find out the correct predictions
-        np_predicted = output.detach().cpu().numpy()
-        np_labels = labels.detach().cpu().numpy()
-
-        # find the number of correct predictions
-        # for index in range(np_predicted.shape[0]):
-        # prediction = convert_optical_label(
-        #   optical_label=np_predicted[index]
-        # )[0]
-        # label = convert_optical_label(
-        #  optical_label=np_labels[index]
-        # )[0]
-        # if prediction == label:
-        #    n_correct += 1
-
-        # add the batch loss
-        batch_losses.append(loss.item())
-
-    # find out and append the total loss
-    loss = sum(batch_losses) / len(batch_losses)
-    losses.append(loss)
-
-    # print the prediction and batch loss
-    print(f"epoch: {epoch}, loss: {loss}")
-
-    # plot a histogram of the loss vs epoch
-    plt.figure(figsize=(12, 8))
-    plt.title("Loss vs Epochs")
-    plt.ylabel("Mean squared Error")
-    plt.xlabel("Epochs")
-    plt.plot(losses)
-    plt.show()
-
-# show 10 random predictions
 with torch.no_grad():
-    for j in range(10):
+    for j in range(50):
         # get a random index
         random_index = np.random.randint(low=0, high=1000)
 
         # get a random image and label
-        test_image, test_label = train_dataset[random_index]
+        test_image, test_label = test_dataset[random_index]
 
         # get the prediction for images
         test_prediction = model(test_image)
@@ -222,9 +202,5 @@ with torch.no_grad():
         axis[2].set_title(f"Label: {real_label}")
         b = axis[2].imshow(test_label, cmap="inferno")
         figure.colorbar(mappable=b)
-
+        plt.savefig(f"results/model_predictions/model_prediction_{j}.png")
         plt.show()
-
-# save the trained model
-
-torch.save(model.state_dict(), "dnn_models/model_0")
