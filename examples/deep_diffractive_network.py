@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 import os
 from pyonn.utils import create_square_grid_pattern
 from pyonn_data.datasets import OpticalImageDataset
+from pyonn_data.processing import convert_optical_label
 import torch
 from torch.utils.data import DataLoader
 
@@ -20,16 +21,21 @@ os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN/data")
 train_images = np.load("mnist_processed_data/train_images", allow_pickle=True)
 train_labels = np.load("mnist_processed_data/train_labels", allow_pickle=True)
 
+train_images = train_images[0:1000]
+train_labels = train_labels[0:1000]
+
 # create an optical image dataset
 train_dataset = OpticalImageDataset(
     optical_images=train_images, optical_labels=train_labels
 )
 
+# number of samples in the dataset
+n_samples = train_dataset.__len__()
+
 # create a data loader for the training data
 train_loader = DataLoader(
-    dataset=train_dataset, batch_size=160, shuffle=True, num_workers=0
+    dataset=train_dataset, batch_size=32, shuffle=True, num_workers=0
 )
-
 
 # wavelength of light
 wavelength = 1.55e-6
@@ -92,8 +98,22 @@ model = DiffractiveNN()
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-n_epochs = 100
+# number of epochs
+n_epochs = 5
+
+# a list of all losses after an epoch
+losses = []
+
+# a list of accuracies predicted after an epoch
+accuracies = []
+
 for epoch in range(n_epochs):
+
+    # number of correct predictions
+    n_correct = 0
+
+    # a list of all losses calculated after a batch size training
+    batch_losses = []
 
     for i, (images, labels) in enumerate(train_loader):
         # forward pass
@@ -105,22 +125,78 @@ for epoch in range(n_epochs):
         loss.backward()
         optimizer.step()
 
-        # copy the output and show it as plt
-        if i % 100 == 0:
-            print("epoch:", epoch, "i: ", i, " loss: ", loss)
-            np_predicted = output.detach().cpu().numpy()
-            np_labels = labels.detach().cpu().numpy()
+        # move from torch to numpy to find out the correct predictions
+        np_predicted = output.detach().cpu().numpy()
+        np_labels = labels.detach().cpu().numpy()
 
-            plot_label = np_labels[0]
-            plot_predicted = np_predicted[0]
+        # find the number of correct predictions
+        # for index in range(np_predicted.shape[0]):
+        # prediction = convert_optical_label(
+        #      optical_label=np_predicted[index]
+        #  )[0]
+        #  label = convert_optical_label(
+        #     optical_label=np_labels[index]
+        #  )[0]
+        # if prediction == label:
+        #    n_correct += 1
 
-            plt.figure(figsize=(8, 4))
-            plt.subplot(
-                121, title=f"Prediction after epoch: {epoch}, " f"i: {i}"
-            )
-            plt.imshow(plot_predicted, origin="lower")
-            plt.colorbar()
-            plt.subplot(122, title="Label")
-            plt.imshow(plot_label, origin="lower")
-            plt.colorbar()
-            plt.show()
+        # add the batch loss
+        batch_losses.append(loss.item())
+
+    # find out and append the total loss
+    loss = sum(batch_losses) / len(batch_losses)
+    losses.append(loss)
+
+    # print the prediction and batch loss
+    print(f"epoch: {epoch}, loss: {loss}")
+
+    # plot a histogram of the loss vs epoch
+    plt.figure(figsize=(12, 8))
+    plt.ylabel("Mean squared Error")
+    plt.xlabel("Epochs")
+    plt.plot(losses)
+    plt.show()
+
+# show 10 random predictions
+with torch.no_grad():
+    for j in range(10):
+        # get a random index
+        random_index = np.random.randint(low=0, high=1000)
+
+        # get a random image and label
+        test_image, test_label = train_dataset[random_index]
+
+        # get the prediction for images
+        test_prediction = model(test_image)
+
+        # convert them to numpy
+        test_image = test_image.detach().cpu().numpy()
+        test_label = test_label.detach().cpu().numpy()
+        test_prediction = test_prediction.detach().cpu().numpy()
+
+        # get the 'real' labels (integer not optical images
+        real_prediction = convert_optical_label(optical_label=test_prediction)[
+            0
+        ]
+        real_label = convert_optical_label(optical_label=test_label)[0]
+
+        # plot the image, prediction and label
+        # create the figure
+        figure, axis = plt.subplots(1, 3, figsize=(30, 8))
+
+        # plot the initial image
+        axis[0].set_title(f"Input Image: {real_label}")
+        c = axis[0].imshow(test_image, cmap="jet")
+        figure.colorbar(mappable=c)
+
+        # plot the prediction
+        axis[1].set_title(f"Prediction: {real_prediction}")
+        a = axis[1].imshow(test_prediction, cmap="jet")
+        figure.colorbar(mappable=a)
+
+        # plot the label
+        axis[2].set_title(f"Label: {real_label}")
+        b = axis[2].imshow(test_label, cmap="jet")
+        figure.colorbar(mappable=b)
+
+        plt.show()
