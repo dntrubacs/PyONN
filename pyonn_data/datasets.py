@@ -137,7 +137,6 @@ def create_optical_labels(
 
 
 if __name__ == "__main__":
-
     # the directory in which the data
     os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN/data")
 

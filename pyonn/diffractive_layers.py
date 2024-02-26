@@ -198,18 +198,13 @@ class StaticDiffractiveLayer(DiffractiveLayerCommon):
         return propagated_spacial_spectrum
 
 
-class InputDiffractiveLayer(StaticDiffractiveLayer):
+class InputDiffractiveLayer(DiffractiveLayerCommon):
     """Input layer for Diffractive Networks.
 
-    This layer does not require an input for the forward pass and
-    can be considered as the 'source of light' in a Deep Diffractive Neural
-    Network. For a full documentation about attributes see the
+    This layer does not require weights and it can be considered as the
+    'source of light' in a Deep Diffractive Neural Network.
+    For a full documentation about attributes see the
     DiffractiveLayerCommon class.
-
-     Attributes:
-        weights_static: torch.Tensor object containing a size x size
-            matrix with the phase valued elements. These values are static
-            are non-trainable. These values are always given as input.
     """
 
     def __init__(
@@ -220,7 +215,6 @@ class InputDiffractiveLayer(StaticDiffractiveLayer):
         z_coordinate: float,
         z_next: float,
         wavelength: float,
-        weights_static: torch.Tensor,
     ) -> None:
         super().__init__(
             n_size,
@@ -229,18 +223,14 @@ class InputDiffractiveLayer(StaticDiffractiveLayer):
             z_coordinate,
             z_next,
             wavelength,
-            weights_static,
         )
+
         # the parameters characterizing the architecture of the layer.
         self.n_size = n_size
         self.x_coordinates = x_coordinates
         self.y_coordinates = y_coordinates
         self.z_coordinate = z_coordinate
         self.z_next = z_next
-
-        # initialize a size x size matrix and instantiate all elements as
-        # Parameters. The amplitude must be always smaller than 1.
-        self.weights_static = weights_static
 
         # the wavelength of light
         self.wavelength = wavelength
@@ -257,11 +247,11 @@ class InputDiffractiveLayer(StaticDiffractiveLayer):
             y_coordinates=self.y_coordinates,
         )
 
-    def forward(self, x: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward model based on the angular spectrum propagation method.
 
-        Same as StaticDiffractiveLayer but without the necessity of an
-        input.
+        Args: Should be a complex amplitude map that is considered as
+            the source of light.
 
         Returns:
             Tensor representing the output of this layer at the given points
@@ -270,7 +260,7 @@ class InputDiffractiveLayer(StaticDiffractiveLayer):
         """
         # find the propagated complex amplitude map at z
         propagated_spatial_spectrum = propagate_complex_amplitude_map(
-            complex_amplitude_map=self.weights_static,
+            complex_amplitude_map=x,
             x_coordinates=self.x_coordinates,
             wavelength=self.wavelength,
             distance=self.z_next - self.z_coordinate,
@@ -410,14 +400,17 @@ class DetectorLayer(torch.nn.Module):
             Torch tensor representing the intensity map of x.
         """
         # check that the size of the detector and input complex map is the same
-        if x.shape != (self.n_size, self.n_size):
-            raise Exception(
-                "InputError! Shape of complex map input"
-                "and Detector are different"
-            )
+        # if (x.shape[1], x.shape[2]) != (self.n_size, self.n_size):
+        #  raise Exception(
+        #     "InputError! Shape of complex map input"
+        #      "and Detector are different"
+        # )
 
         # save the intensity_map
         self.intensity_map = torch.square(torch.abs(x))
+
+        # normalize the intensity map
+        self.intensity_map = self.intensity_map / torch.max(self.intensity_map)
 
         # return the intensity map
         return self.intensity_map
@@ -469,7 +462,6 @@ if __name__ == "__main__":
         y_coordinates=debug_y_coordinates,
         z_coordinate=0.0,
         z_next=1.0,
-        weights_static=torch.ones(size=(100, 100)),
         wavelength=1.55e-6,
     )
 

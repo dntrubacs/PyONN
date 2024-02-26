@@ -67,7 +67,6 @@ for dist in [0.1, 1, 2, 5, 10, 20, 50]:
         y_coordinates=x_coordinates,
         z_coordinate=0.0,
         z_next=resized_dist,
-        weights_static=initial_phase_map,
         wavelength=1.55e-6,
     )
 
@@ -80,7 +79,7 @@ for dist in [0.1, 1, 2, 5, 10, 20, 50]:
     )
 
     # do the forward pass (propagate the light)
-    propagated_map = single_slit_input.forward()
+    propagated_map = single_slit_input.forward(initial_phase_map)
 
     # do the forward pass for the detector layer
     d = detector_layer.forward(x=propagated_map)
