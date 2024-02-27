@@ -286,3 +286,27 @@ def plot_model_testing(
 
     # show the figure
     plt.show()
+
+
+def plot_training_histogram(
+    training_losses: list, validation_losses: Optional[list] = None
+) -> None:
+    """Plots the training histogram.
+
+    Args:
+        training_losses: Losses of the model during each epoch.
+        validation_losses: Validations losses of the model during each epoch.
+    """
+    # the number of all epochs numbers
+    epochs = np.arange(1, len(training_losses) + 1)
+
+    # plot the histogram
+    plt.figure(figsize=(12, 8))
+    plt.title("Loss vs Epochs")
+    plt.ylabel("Mean squared Error")
+    plt.xlabel("Epochs")
+    plt.plot(epochs, training_losses, color="green", label="training")
+    if validation_losses is not None:
+        plt.plot(epochs, validation_losses, color="blue", label="validation")
+    plt.legend()
+    plt.show()

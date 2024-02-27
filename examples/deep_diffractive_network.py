@@ -8,14 +8,16 @@ from pyonn.diffractive_layers import (
     DiffractiveLayer,
 )
 import numpy as np
-from matplotlib import pyplot as plt
 import os
-from pyonn.utils import create_square_grid_pattern, plot_model_testing
+from pyonn.utils import (
+    create_square_grid_pattern,
+    plot_model_testing,
+    plot_training_histogram,
+)
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn_data.processing import convert_optical_label
 import torch
 from torch.utils.data import DataLoader
-
 
 # Device configuration (used always fore very torch tensor declared)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,26 +26,29 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
     file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
-)[0:1000]
+)
 train_labels = np.load(
     file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
-)[0:1000]
-
-# create an optical image dataset
-train_dataset = OpticalImageDataset(
-    optical_images=train_images, optical_labels=train_labels
 )
 
-# number of samples in the dataset
-n_samples = train_dataset.__len__()
+# in this case the size of the data is 60000 images, so the dataset will
+# be split 54000:6000 into validation and training
 
-# create a data loader for the training data
+# create an optical image dataset for training and validation
+train_dataset = OpticalImageDataset(
+    optical_images=train_images[0:54000], optical_labels=train_labels[0:54000]
+)
+validation_dataset = OpticalImageDataset(
+    optical_images=train_images[54000:], optical_labels=train_labels[54000:]
+)
+
+# create a train and validation data loader
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=32, shuffle=True, num_workers=0
 )
-
-# wavelength of light
-wavelength = 1.55e-6
+validation_loader = DataLoader(
+    dataset=validation_dataset, batch_size=32, shuffle=True, num_workers=0
+)
 
 # create a square grid pattern centred on [0, 0] with pixel size 0.8 um
 # and pixel number 120 (120^2 pixels in total)
@@ -134,29 +139,28 @@ class DiffractiveNN(torch.nn.Module):
 # build the model and move to cuda if available
 model = DiffractiveNN().to(device)
 
-
 # loss and optimizer
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 1
+n_epochs = 20
 
-# a list of all losses after an epoch
-losses = []
-
-# a list of accuracies predicted after an epoch
-accuracies = []
+# a list of all train and validation losses after an epoch
+train_losses = []
+validation_losses = []
 
 for epoch in range(n_epochs):
 
     # number of correct predictions
     n_correct = 0
 
-    # a list of all losses calculated after a batch size training
-    batch_losses = []
+    # the current train and validation loss
+    train_loss = 0
+    validation_loss = 0
 
-    for i, (images, labels) in enumerate(train_loader):
+    # train the model
+    for images, labels in train_loader:
         # forward pass
         output = model(images)
         loss = criterion(output, labels)
@@ -166,27 +170,33 @@ for epoch in range(n_epochs):
         loss.backward()
         optimizer.step()
 
-        # move from torch to numpy to find out the correct predictions
-        np_predicted = output.detach().cpu().numpy()
-        np_labels = labels.detach().cpu().numpy()
+        # add the training loss
+        train_loss += loss.item()
 
-        # add the batch loss
-        batch_losses.append(loss.item())
+    # validate the model
+    for images, labels in validation_loader:
+        # forward pass
+        output = model(images)
+        loss = criterion(output, labels)
 
-    # find out and append the total loss
-    loss = sum(batch_losses) / len(batch_losses)
-    losses.append(loss)
+        # add the validation loss
+        validation_loss += loss.item()
 
-    # print the prediction and batch loss
-    print(f"epoch: {epoch}, loss: {loss}")
+    # save the current train and validation loss
+    train_losses.append(train_loss / len(train_loader))
+    validation_losses.append(validation_loss / len(validation_loader))
+
+    # print the train and validation after each epoch
+    print(
+        f"Epoch: {epoch}, train loss: {train_losses[-1]}, "
+        f"validation loss: {validation_losses[-1]}"
+    )
 
     # plot a histogram of the loss vs epoch
-    plt.figure(figsize=(12, 8))
-    plt.title("Loss vs Epochs")
-    plt.ylabel("Mean squared Error")
-    plt.xlabel("Epochs")
-    plt.plot(losses)
-    plt.show()
+    plot_training_histogram(
+        training_losses=train_losses, validation_losses=validation_losses
+    )
+
 
 # show 10 random predictions
 with torch.no_grad():
