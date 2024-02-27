@@ -10,7 +10,7 @@ from pyonn.diffractive_layers import (
 import numpy as np
 from matplotlib import pyplot as plt
 import os
-from pyonn.utils import create_square_grid_pattern
+from pyonn.utils import create_square_grid_pattern, plot_model_testing
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn_data.processing import convert_optical_label
 import torch
@@ -24,10 +24,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
     file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
-)
+)[0:1000]
 train_labels = np.load(
     file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
-)
+)[0:1000]
 
 # create an optical image dataset
 train_dataset = OpticalImageDataset(
@@ -140,7 +140,7 @@ criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 20
+n_epochs = 1
 
 # a list of all losses after an epoch
 losses = []
@@ -169,17 +169,6 @@ for epoch in range(n_epochs):
         # move from torch to numpy to find out the correct predictions
         np_predicted = output.detach().cpu().numpy()
         np_labels = labels.detach().cpu().numpy()
-
-        # find the number of correct predictions
-        # for index in range(np_predicted.shape[0]):
-        # prediction = convert_optical_label(
-        #   optical_label=np_predicted[index]
-        # )[0]
-        # label = convert_optical_label(
-        #  optical_label=np_labels[index]
-        # )[0]
-        # if prediction == label:
-        #    n_correct += 1
 
         # add the batch loss
         batch_losses.append(loss.item())
@@ -223,25 +212,14 @@ with torch.no_grad():
         real_label = convert_optical_label(optical_label=test_label)[0]
 
         # plot the image, prediction and label
-        # create the figure
-        figure, axis = plt.subplots(1, 3, figsize=(30, 8))
-
-        # plot the initial image
-        axis[0].set_title(f"Input Image: {real_label}")
-        c = axis[0].imshow(test_image, cmap="jet")
-        figure.colorbar(mappable=c)
-
-        # plot the prediction
-        axis[1].set_title(f"Prediction: {real_prediction}")
-        a = axis[1].imshow(test_prediction, cmap="inferno")
-        figure.colorbar(mappable=a)
-
-        # plot the label
-        axis[2].set_title(f"Label: {real_label}")
-        b = axis[2].imshow(test_label, cmap="inferno")
-        figure.colorbar(mappable=b)
-
-        plt.show()
+        plot_model_testing(
+            input_image=test_image,
+            predicted_image=test_prediction,
+            label_image=test_label,
+            input_image_title=f"Input Image: {real_label}",
+            predicted_image_title=f"Prediction: {real_prediction}",
+            label_image_title=f"Label: {real_label}",
+        )
 
 # save the trained model
 torch.save(model.state_dict(), "dnn_models/fashion_mnist_model_5_layers")

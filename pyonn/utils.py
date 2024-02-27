@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from typing import Optional
 
 
 def find_coordinate_matrix(
@@ -236,15 +237,52 @@ def plot_complex_amplitude_map(
     plt.show()
 
 
-if __name__ == "__main__":
-    debug_x = np.array([[0.2, 5], [0.3, 4]])
-    circ_function(debug_x)
-    # used only for testing and debugging
-    debug_matrix = create_square_grid_pattern(
-        center_coordinates=np.array([0, 0]),
-        pixel_length=0.8e-6,
-        pixel_separation=0.2e-6,
-        pixel_number=3,
-        grid_z_coordinate=1e-6,
-    )
-    # plot_square_grid_pattern(pattern=debug_matrix[0])
+def plot_model_testing(
+    input_image: np.ndarray,
+    predicted_image: np.ndarray,
+    label_image: np.ndarray,
+    input_image_title: str = "Input image",
+    predicted_image_title: str = "Predicted",
+    label_image_title: str = "Label",
+    save_path: Optional[str] = None,
+) -> None:
+    """Plot the input image, prediction and label.
+
+    Args:
+        input_image: Input image in the model (must be an optical image
+            generated with the pyonn_data.processing.create_optical_images
+            function).
+        predicted_image: Predicted image of the model.
+        label_image: Label of the input image (must be an optical label
+            generated with the pyonn_data.processing.create_optical_labels
+            function).
+        input_image_title: Title for the figure containing the input image.
+        predicted_image_title: Title for the figure containing the predicted
+            image.
+        label_image_title: Title for the figure containing the label.
+        save_path: The path where to save the figure.
+    """
+    # create the figure
+    figure, axis = plt.subplots(1, 3, figsize=(30, 8))
+
+    # plot the input image
+    axis[0].set_title(input_image_title)
+    input_image_map = axis[0].imshow(input_image, cmap="jet")
+    figure.colorbar(mappable=input_image_map)
+
+    # plot the predicted image
+    axis[1].set_title(predicted_image_title)
+    predicted_image_map = axis[1].imshow(predicted_image, cmap="inferno")
+    figure.colorbar(mappable=predicted_image_map)
+
+    # plot the label
+    axis[2].set_title(label_image_title)
+    label_image_map = axis[2].imshow(label_image, cmap="inferno")
+    figure.colorbar(mappable=label_image_map)
+
+    # if required, save the figure
+    if save_path is not None:
+        plt.savefig(save_path)
+
+    # show the figure
+    plt.show()
