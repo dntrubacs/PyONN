@@ -12,7 +12,10 @@ from matplotlib import pyplot as plt
 import os
 from pyonn.utils import create_square_grid_pattern
 from pyonn_data.datasets import OpticalImageDataset
-from pyonn_data.processing import convert_optical_label
+from pyonn_data.processing import (
+    convert_optical_label,
+    convert_fashion_mnist_label,
+)
 import torch
 
 
@@ -22,16 +25,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/mnist_processed_data/train_images", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_processed_data/train_labels", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
 )
 test_images = np.load(
-    file="data/mnist_processed_data/test_images", allow_pickle=True
+    file="data/fashion_mnist_processed_data/test_images", allow_pickle=True
 )
 test_labels = np.load(
-    file="data/mnist_processed_data/test_labels", allow_pickle=True
+    file="data/fashion_mnist_processed_data/test_labels", allow_pickle=True
 )
 
 # create an optical image dataset
@@ -101,11 +104,27 @@ class DiffractiveNN(torch.nn.Module):
             z_coordinate=30e-6,
             z_next=40e-6,
         )
+        self.diffractive_layer_3 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=40e-6,
+            z_next=50e-6,
+        )
+        self.diffractive_layer_4 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=50e-6,
+            z_next=60e-6,
+        )
         self.detector_layer = DetectorLayer(
             n_size=self.neuron_size,
             x_coordinates=self.x_coordinates,
             y_coordinates=self.x_coordinates,
-            z_coordinate=40e-6,
+            z_coordinate=60e-6,
         )
 
     # the forward pass
@@ -114,36 +133,34 @@ class DiffractiveNN(torch.nn.Module):
         x = self.diffractive_layer_0(x)
         x = self.diffractive_layer_1(x)
         x = self.diffractive_layer_2(x)
+        x = self.diffractive_layer_3(x)
+        x = self.diffractive_layer_4(x)
         x = self.detector_layer(x)
         return x
 
 
 # load the trained weights
 model = DiffractiveNN().to(device)
-model.load_state_dict(torch.load("dnn_models/model_0"))
+model.load_state_dict(torch.load("dnn_models/fashion_mnist_model_5_layers"))
 
 # n correct for test and train dataset
 n_correct_train = 0
 n_correct_test = 0
 
-"""
+
 # find the accuracy for the training data
 for i in range(n_samples_train):
     train_image, train_label = train_dataset[i]
     prediction = model(train_image)
     np_prediction = prediction.detach().cpu().numpy()
     np_label = train_label.detach().cpu().numpy()
-    real_prediction = convert_optical_label(
-           optical_label=np_prediction
-    )[0]
-    real_label = convert_optical_label(
-      optical_label=np_label
-    )[0]
+    real_prediction = convert_optical_label(optical_label=np_prediction)[0]
+    real_label = convert_optical_label(optical_label=np_label)[0]
     if real_prediction == real_label:
         n_correct_train += 1
     if i % 1000 == 0 and i > 1:
-        print(i, n_correct_train, n_correct_train/i*100)
-"""
+        print(i, n_correct_train, n_correct_train / i * 100)
+
 # find the accuracy for the testing data
 for i in range(n_samples_test):
     test_image, test_label = test_dataset[i]
@@ -158,7 +175,7 @@ for i in range(n_samples_test):
     if i % 1000 == 0 and i > 1:
         print(i, n_correct_test, n_correct_test / i * 100)
 
-# print(f'train accuracy: {n_correct_train/n_samples_train*100} %')
+print(f"train accuracy: {n_correct_train/n_samples_train*100} %")
 print(f"test accuracy: {n_correct_test/n_samples_test*100} %")
 
 
@@ -189,18 +206,27 @@ with torch.no_grad():
         figure, axis = plt.subplots(1, 3, figsize=(30, 8))
 
         # plot the initial image
-        axis[0].set_title(f"Input Image: {real_label}")
+        axis[0].set_title(
+            f"Input Image: " f"{convert_fashion_mnist_label(real_label)}"
+        )
         c = axis[0].imshow(test_image, cmap="jet")
         figure.colorbar(mappable=c)
 
         # plot the prediction
-        axis[1].set_title(f"Prediction: {real_prediction}")
+        axis[1].set_title(
+            f"Prediction: " f"{convert_fashion_mnist_label(real_prediction)}"
+        )
         a = axis[1].imshow(test_prediction, cmap="inferno")
         figure.colorbar(mappable=a)
 
         # plot the label
-        axis[2].set_title(f"Label: {real_label}")
+        axis[2].set_title(
+            f"Label: " f"{convert_fashion_mnist_label(real_label)}"
+        )
         b = axis[2].imshow(test_label, cmap="inferno")
         figure.colorbar(mappable=b)
-        plt.savefig(f"results/model_predictions/model_prediction_{j}.png")
+        plt.savefig(
+            f"results/model_predictions/fashion_mnist"
+            f"/model_prediction_{j}.png"
+        )
         plt.show()

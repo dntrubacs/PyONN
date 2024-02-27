@@ -7,7 +7,6 @@ import numpy as np
 import cv2 as cv
 import pickle
 from typing import Optional
-import os
 
 
 def create_optical_images(
@@ -188,25 +187,28 @@ def create_optical_labels(
     return processed_labels
 
 
-if __name__ == "__main__":
-    from matplotlib import pyplot as plt
+def convert_fashion_mnist_label(label: int) -> str:
+    """Convert the Fashion Mnist label from integer to clothing type.
 
-    # the directory in which the data
-    os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN/data")
+    Args:
+        label: Integer between 0 and 9 representing a class of clothing.
 
-    # load the data
-    data_file = "mnist_raw_data/t10k-images.idx3-ubyte"
-    labels_file = "mnist_raw_data/train-labels.idx1-ubyte"
+    Returns:
+        The clothing type:
+    """
+    # the dictionary with all the clothing type
+    clothing_dict = {
+        0: "T - shirt / top",
+        1: "Trouser",
+        2: "Pullover",
+        3: "Dress",
+        4: "Coat",
+        5: "Sandal",
+        6: "Shirt",
+        7: "Sneaker",
+        8: "Bag",
+        9: "Ankle boot",
+    }
 
-    # save the labels file
-    a = create_optical_labels(
-        labels_path=labels_file,
-        saved_label_path="mnist_processed_data/train_labels",
-    )
-    for i in range(100):
-        label, label_list = convert_optical_label(optical_label=a[i])
-        if label == 9:
-            print(label_list)
-            plt.title(str(label))
-            plt.imshow(a[i])
-            plt.show()
+    # return the clothing type
+    return clothing_dict[label]

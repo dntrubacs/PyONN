@@ -23,10 +23,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/mnist_processed_data/train_images", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_processed_data/train_labels", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset
@@ -96,11 +96,27 @@ class DiffractiveNN(torch.nn.Module):
             z_coordinate=30e-6,
             z_next=40e-6,
         )
+        self.diffractive_layer_3 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=40e-6,
+            z_next=50e-6,
+        )
+        self.diffractive_layer_4 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=50e-6,
+            z_next=60e-6,
+        )
         self.detector_layer = DetectorLayer(
             n_size=self.neuron_size,
             x_coordinates=self.x_coordinates,
             y_coordinates=self.x_coordinates,
-            z_coordinate=40e-6,
+            z_coordinate=60e-6,
         )
 
     # the forward pass
@@ -109,6 +125,8 @@ class DiffractiveNN(torch.nn.Module):
         x = self.diffractive_layer_0(x)
         x = self.diffractive_layer_1(x)
         x = self.diffractive_layer_2(x)
+        x = self.diffractive_layer_3(x)
+        x = self.diffractive_layer_4(x)
         x = self.detector_layer(x)
         return x
 
@@ -226,5 +244,4 @@ with torch.no_grad():
         plt.show()
 
 # save the trained model
-
-torch.save(model.state_dict(), "dnn_models/model_0")
+torch.save(model.state_dict(), "dnn_models/fashion_mnist_model_5_layers")
