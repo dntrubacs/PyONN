@@ -17,7 +17,7 @@ from pyonn.utils import (
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn_data.processing import convert_optical_label
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 
 # Device configuration (used always fore very torch tensor declared)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -31,15 +31,15 @@ train_labels = np.load(
     file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
 )
 
+# create an optical image dataset f
+dataset = OpticalImageDataset(
+    optical_images=train_images, optical_labels=train_labels
+)
+
 # in this case the size of the data is 60000 images, so the dataset will
 # be split 54000:6000 into validation and training
-
-# create an optical image dataset for training and validation
-train_dataset = OpticalImageDataset(
-    optical_images=train_images[0:54000], optical_labels=train_labels[0:54000]
-)
-validation_dataset = OpticalImageDataset(
-    optical_images=train_images[54000:], optical_labels=train_labels[54000:]
+train_dataset, validation_dataset = random_split(
+    dataset=dataset, lengths=[54000, 6000]
 )
 
 # create a train and validation data loader
@@ -144,20 +144,19 @@ criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 20
+n_epochs = 50
 
 # a list of all train and validation losses after an epoch
 train_losses = []
 validation_losses = []
 
 for epoch in range(n_epochs):
-
-    # number of correct predictions
-    n_correct = 0
-
     # the current train and validation loss
     train_loss = 0
     validation_loss = 0
+
+    # train the model
+    model.train()
 
     # train the model
     for images, labels in train_loader:
@@ -174,13 +173,17 @@ for epoch in range(n_epochs):
         train_loss += loss.item()
 
     # validate the model
-    for images, labels in validation_loader:
-        # forward pass
-        output = model(images)
-        loss = criterion(output, labels)
+    # evaluate model:
+    model.eval()
 
-        # add the validation loss
-        validation_loss += loss.item()
+    with torch.no_grad():
+        for images, labels in validation_loader:
+            # forward pass
+            output = model(images)
+            loss = criterion(output, labels)
+
+            # add the validation loss
+            validation_loss += loss.item()
 
     # save the current train and validation loss
     train_losses.append(train_loss / len(train_loader))
@@ -232,4 +235,4 @@ with torch.no_grad():
         )
 
 # save the trained model
-torch.save(model.state_dict(), "dnn_models/fashion_mnist_model_5_layers")
+torch.save(model.state_dict(), "dnn_models/fashion_mnist_model_5_layers_v2")

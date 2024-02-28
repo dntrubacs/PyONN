@@ -141,7 +141,7 @@ class DiffractiveNN(torch.nn.Module):
 
 # load the trained weights
 model = DiffractiveNN().to(device)
-model.load_state_dict(torch.load("dnn_models/fashion_mnist_model_5_layers"))
+model.load_state_dict(torch.load("dnn_models/fashion_mnist_model_5_layers_v2"))
 
 # n correct for test and train dataset
 n_correct_train = 0

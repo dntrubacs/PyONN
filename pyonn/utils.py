@@ -298,13 +298,16 @@ def plot_training_histogram(
         validation_losses: Validations losses of the model during each epoch.
     """
     # the number of all epochs numbers
-    epochs = np.arange(1, len(training_losses) + 1)
+    epochs = np.arange(1, len(training_losses) + 1, step=1)
 
     # plot the histogram
     plt.figure(figsize=(12, 8))
     plt.title("Loss vs Epochs")
     plt.ylabel("Mean squared Error")
     plt.xlabel("Epochs")
+    # plot all the epochs number only if the number is smaller than 10
+    if len(epochs) < 10:
+        plt.xticks(epochs)
     plt.plot(epochs, training_losses, color="green", label="training")
     if validation_losses is not None:
         plt.plot(epochs, validation_losses, color="blue", label="validation")
