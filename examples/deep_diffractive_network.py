@@ -53,7 +53,7 @@ criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 1
+n_epochs = 50
 
 # a list of all train and validation losses after an epoch
 train_losses = []

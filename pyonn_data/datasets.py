@@ -42,27 +42,3 @@ class OpticalImageDataset(Dataset):
     # get len method
     def __len__(self) -> int:
         return self.n_samples
-
-
-if __name__ == "__main__":
-    import os
-    from torch.utils.data import DataLoader
-
-    # load the data (must be optical images and labels)
-    os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN/data")
-    images = np.load("mnist_processed_data/train_images", allow_pickle=True)
-    labels = np.load("mnist_processed_data/train_labels", allow_pickle=True)
-
-    # generate an optical image dataset
-    debug_dataset = OpticalImageDataset(
-        optical_images=images, optical_labels=labels
-    )
-
-    # create a data loader
-    debug_loader = DataLoader(
-        dataset=debug_dataset, batch_size=12, shuffle=True, num_workers=0
-    )
-    dataiter = iter(debug_loader)
-    data = next(dataiter)
-    features, labels = data
-    print(features, labels)
