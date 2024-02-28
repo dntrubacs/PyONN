@@ -2,20 +2,12 @@
 module is tp show an example of a deep diffractive neural network trained
 on the MNIST dataset."""
 
-from pyonn.diffractive_layers import (
-    InputDiffractiveLayer,
-    DetectorLayer,
-    DiffractiveLayer,
-)
 import numpy as np
 import os
-from pyonn.utils import (
-    create_square_grid_pattern,
-    plot_model_testing,
-    plot_training_histogram,
-)
+from pyonn.utils import plot_model_testing, plot_training_histogram
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn_data.processing import convert_optical_label
+from pyonn.prebuilts import FiveLayerDiffractiveNN
 import torch
 from torch.utils.data import DataLoader, random_split
 
@@ -50,101 +42,15 @@ validation_loader = DataLoader(
     dataset=validation_dataset, batch_size=32, shuffle=True, num_workers=0
 )
 
-# create a square grid pattern centred on [0, 0] with pixel size 0.8 um
-# and pixel number 120 (120^2 pixels in total)
-square_grid_pattern = create_square_grid_pattern(
-    center_coordinates=np.array([0, 0]),
-    pixel_length=0.8e-6,
-    pixel_number=120,
-    pixel_separation=0.0,
-    grid_z_coordinate=0,
-)
-# get the coordinates
-x_coordinates = square_grid_pattern[1]
-
-
-class DiffractiveNN(torch.nn.Module):
-    def __init__(self) -> None:
-        super().__init__()
-        self.wavelength = 1.55e-6
-        self.neuron_size = 120
-        self.x_coordinates = x_coordinates
-        self.input_layer = InputDiffractiveLayer(
-            n_size=self.neuron_size,
-            x_coordinates=self.x_coordinates,
-            y_coordinates=self.x_coordinates,
-            wavelength=self.wavelength,
-            z_coordinate=0,
-            z_next=10e-6,
-        )
-        self.diffractive_layer_0 = DiffractiveLayer(
-            n_size=self.neuron_size,
-            x_coordinates=self.x_coordinates,
-            y_coordinates=self.x_coordinates,
-            wavelength=self.wavelength,
-            z_coordinate=10e-6,
-            z_next=20e-6,
-        )
-        self.diffractive_layer_1 = DiffractiveLayer(
-            n_size=self.neuron_size,
-            x_coordinates=self.x_coordinates,
-            y_coordinates=self.x_coordinates,
-            wavelength=self.wavelength,
-            z_coordinate=20e-6,
-            z_next=30e-6,
-        )
-        self.diffractive_layer_2 = DiffractiveLayer(
-            n_size=self.neuron_size,
-            x_coordinates=self.x_coordinates,
-            y_coordinates=self.x_coordinates,
-            wavelength=self.wavelength,
-            z_coordinate=30e-6,
-            z_next=40e-6,
-        )
-        self.diffractive_layer_3 = DiffractiveLayer(
-            n_size=self.neuron_size,
-            x_coordinates=self.x_coordinates,
-            y_coordinates=self.x_coordinates,
-            wavelength=self.wavelength,
-            z_coordinate=40e-6,
-            z_next=50e-6,
-        )
-        self.diffractive_layer_4 = DiffractiveLayer(
-            n_size=self.neuron_size,
-            x_coordinates=self.x_coordinates,
-            y_coordinates=self.x_coordinates,
-            wavelength=self.wavelength,
-            z_coordinate=50e-6,
-            z_next=60e-6,
-        )
-        self.detector_layer = DetectorLayer(
-            n_size=self.neuron_size,
-            x_coordinates=self.x_coordinates,
-            y_coordinates=self.x_coordinates,
-            z_coordinate=60e-6,
-        )
-
-    # the forward pass
-    def forward(self, x) -> torch.Tensor:
-        x = self.input_layer(x)
-        x = self.diffractive_layer_0(x)
-        x = self.diffractive_layer_1(x)
-        x = self.diffractive_layer_2(x)
-        x = self.diffractive_layer_3(x)
-        x = self.diffractive_layer_4(x)
-        x = self.detector_layer(x)
-        return x
-
-
 # build the model and move to cuda if available
-model = DiffractiveNN().to(device)
+model = FiveLayerDiffractiveNN().to(device)
 
 # loss and optimizer
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 50
+n_epochs = 5
 
 # a list of all train and validation losses after an epoch
 train_losses = []
@@ -235,4 +141,4 @@ with torch.no_grad():
         )
 
 # save the trained model
-torch.save(model.state_dict(), "dnn_models/fashion_mnist_model_5_layers_v2")
+torch.save(model.state_dict(), "dnn_models/fashion_mnist_model_5_layers_v1")
