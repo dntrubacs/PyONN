@@ -195,86 +195,39 @@ def plot_real_maps(
     plt.show()
 
 
-if __name__ == "__main__":
-    from utils import create_square_grid_pattern
-    from diffraction_equations import find_phase_change
+def find_phase_change(
+    n_1: float,
+    thickness: float,
+    wavelength: float,
+    n_2: float = 1.0,
+) -> float:
+    """Finds the phase change of light passing through a material from
+    air.
 
-    # wavelength
-    debug_wavelength = 1.55e-6
+    This represents the physical value of the phase neuron weight. The phase
+    term is simply the exp(j*phi) of the neuron where phi is the phase change
+    of light.
 
-    # create a square grid pattern centred on [0, 0] with pixel size 1 um
-    # and pixel number 20 (400 pixels in total)
-    square_grid_pattern = create_square_grid_pattern(
-        center_coordinates=np.array([0, 0]),
-        pixel_length=0.8e-6,
-        pixel_number=100,
-        pixel_separation=0.0,
-        grid_z_coordinate=0,
-    )
+    Args:
+        n_1: Refractive index of the material. Can be a
+            scalar or a matrix containing multiple entries.
+        n_2: Refractive index of the material from which the light is coming
+            (must be constant)
+        thickness: Thickness of the material (measured in meters).
+        wavelength: Wavelength of light passing though the material (measured
+            in meters).
 
-    # retain only the x coordinates of the pattern (necessary for the
-    # meshgrid)
-    debug_x_coordinates = square_grid_pattern[1]
-    pattern = square_grid_pattern[0]
+    Returns:
+        Torch tensor representing the phase change in light.
+    """
+    # squeeze the
+    # find out the phase change
+    phase_change = (2 * np.pi / wavelength) * (n_1 - n_2) * thickness
 
-    # find the phase change for crystalline and amorphous Sb2Se3 film of
-    # thickness 1 um
-    amorphous_phase_change = find_phase_change(
-        n_1=3.28536, thickness=1e-6, wavelength=1.55e-6, n_2=1.0
-    )
-    crystalline_phase_change = find_phase_change(
-        n_1=4.04933, thickness=1e-6, wavelength=1.55e-6, n_2=1.0
-    )
+    # get the phase change between 0 and 2pi
+    phase_change = phase_change % (2 * torch.pi)
 
-    # generate a phase map that represents a single silt
-    # all pixels have amplitude 1 but different phase
-    debug_map = np.zeros(shape=(100, 100), dtype=np.float64) + 1.0
+    # transfer to [-pi, pi] interval
+    phase_change = phase_change - torch.pi
 
-    # create a complex amplitude map for the phase change material
-    # e^(j*phase)
-    # set the background of the map to amorphous phase change
-    debug_map = debug_map * np.exp(1j * amorphous_phase_change)
-    print(square_grid_pattern[1][5], square_grid_pattern[1][95], ">>>>")
-    # greate a grid of crystalline phase change
-    for i in range(7):
-        # set the grid on both x and y
-        debug_map[25:75, (i + 2) * 10] = np.exp(1j * crystalline_phase_change)
-        # debug_map[(i + 1) * 10, 5:95] = np.exp(1j * crystalline_phase_change)
-
-    # move from numpy to torch tensors
-    debug_map = torch.from_numpy(debug_map)
-
-    # move the tensor to use cuda if available
-    debug_map = debug_map.to(device)
-
-    # show the initial phase map
-    plot_real_maps(
-        complex_amplitude_map=debug_map,
-        x_coordinates=debug_x_coordinates,
-        intensity_map_title="Initial Intensity Map",
-        phase_map_title="Initial Phase Map",
-    )
-
-    # find the propagated complex amplitude map for different distance
-    for dist in [0.1, 1, 2, 5, 10, 20, 50]:
-        resized_dist = dist * 1e-6
-
-        # get the propagated phase map at 1 um
-        os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
-        propagated_phase_map = propagate_complex_amplitude_map(
-            complex_amplitude_map=debug_map,
-            x_coordinates=debug_x_coordinates,
-            wavelength=debug_wavelength,
-            distance=resized_dist
-            # folder_name="results/grid/scalar",
-            # data_name=f"propagated map at distance {dist} um",
-        )
-
-        plot_real_maps(
-            complex_amplitude_map=propagated_phase_map,
-            x_coordinates=debug_x_coordinates,
-            intensity_map_title=f"Propagated intensity map at: "
-            f"{round(dist, 3)} $\mu$ m",  # noqa W605
-            phase_map_title=f"Propagated phase map at: "
-            f"{round(dist, 3)} $\mu$ m",  # noqa W605
-        )
+    return phase_change

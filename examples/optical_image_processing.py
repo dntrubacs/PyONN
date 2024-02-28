@@ -1,4 +1,4 @@
-""" Created by Daniel-Iosif Trubacs on 27 February 2024. The puporse of this
+""" Created by Daniel-Iosif Trubacs on 27 February 2024. The purpose of this
 module is to serve as an example from processing black and white images and c
 converting them to optical images."""
 

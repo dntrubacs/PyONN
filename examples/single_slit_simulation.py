@@ -7,12 +7,17 @@ Sb2Se3 with a written crystalline Sb2Se3 slit.
 """
 
 from pyonn.utils import create_square_grid_pattern
-from pyonn.diffraction_equations import find_phase_change
 from pyonn.diffractive_layers import InputDiffractiveLayer, DetectorLayer
-from pyonn.angular_spectrum_propagation_method import plot_real_maps
+from pyonn.angular_spectrum_propagation_method import (
+    plot_real_maps,
+    find_phase_change,
+)
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
+
+# Device configuration (used always fore very torch tensor declared)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # wavelength of light
 wavelength = 1.55e-6
@@ -79,7 +84,7 @@ for dist in [0.1, 1, 2, 5, 10, 20, 50]:
     )
 
     # do the forward pass (propagate the light)
-    propagated_map = single_slit_input.forward(initial_phase_map)
+    propagated_map = single_slit_input.forward(initial_phase_map.to(device))
 
     # do the forward pass for the detector layer
     d = detector_layer.forward(x=propagated_map)
