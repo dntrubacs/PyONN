@@ -4,13 +4,14 @@ module is to test already trained models.
 """
 
 import numpy as np
-from matplotlib import pyplot as plt
 import os
 from pyonn.prebuilts import FiveLayerDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
-from pyonn_data.processing import (
-    convert_optical_label,
-    convert_fashion_mnist_label,
+from pyonn_data.processing import convert_fashion_mnist_label
+from pyonn.utils import (
+    test_model_on_image,
+    plot_model_testing,
+    test_model_on_dataset,
 )
 import torch
 
@@ -42,98 +43,45 @@ test_dataset = OpticalImageDataset(
     optical_images=test_images, optical_labels=test_labels
 )
 
-# number of samples in the dataset
-n_samples_train = train_dataset.__len__()
-n_samples_test = test_dataset.__len__()
-
 # load the trained weights
 model = FiveLayerDiffractiveNN().to(device)
-model.load_state_dict(torch.load("dnn_models/fashion_mnist_model_5_layers_v1"))
-
-# n correct for test and train dataset
-n_correct_train = 0
-n_correct_test = 0
-
+model.load_state_dict(torch.load("dnn_models/fashion_mnist_model_5_layers_v2"))
 
 # find the accuracy for the training data
-for i in range(n_samples_train):
-    train_image, train_label = train_dataset[i]
-    prediction = model(train_image)
-    np_prediction = prediction.detach().cpu().numpy()
-    np_label = train_label.detach().cpu().numpy()
-    real_prediction = convert_optical_label(optical_label=np_prediction)[0]
-    real_label = convert_optical_label(optical_label=np_label)[0]
-    if real_prediction == real_label:
-        n_correct_train += 1
-    if i % 1000 == 0 and i > 1:
-        print(i, n_correct_train, n_correct_train / i * 100)
+print("Finding the accuracy on training data")
+train_accuracy = test_model_on_dataset(model=model, dataset=train_dataset)
 
-# find the accuracy for the testing data
-for i in range(n_samples_test):
-    test_image, test_label = test_dataset[i]
-    prediction = model(test_image)
-    np_prediction = prediction.detach().cpu().numpy()
-    np_label = test_label.detach().cpu().numpy()
-    real_prediction = convert_optical_label(optical_label=np_prediction)[0]
-    real_label = convert_optical_label(optical_label=np_label)[0]
-    if real_prediction == real_label:
-        n_correct_test += 1
+# find the accuracy for the test data
+print("Finding the accuracy on test data")
+test_accuracy = test_model_on_dataset(model=model, dataset=test_dataset)
 
-    if i % 1000 == 0 and i > 1:
-        print(i, n_correct_test, n_correct_test / i * 100)
-
-print(f"train accuracy: {n_correct_train/n_samples_train*100} %")
-print(f"test accuracy: {n_correct_test/n_samples_test*100} %")
+print(f"Train accuracy: {train_accuracy*100} %")
+print(f"Test accuracy: {test_accuracy*100} %")
 
 
 with torch.no_grad():
     for j in range(50):
         # get a random index
-        random_index = np.random.randint(low=0, high=1000)
+        random_index = np.random.randint(low=0, high=10000)
 
         # get a random image and label
         test_image, test_label = test_dataset[random_index]
 
-        # get the prediction for images
-        test_prediction = model(test_image)
+        # test the model on the random data
+        output_test = test_model_on_image(
+            model=model, optical_image=test_image, optical_label=test_label
+        )
 
-        # convert them to numpy
-        test_image = test_image.detach().cpu().numpy()
-        test_label = test_label.detach().cpu().numpy()
-        test_prediction = test_prediction.detach().cpu().numpy()
-
-        # get the 'real' labels (integer not optical images
-        real_prediction = convert_optical_label(optical_label=test_prediction)[
-            0
-        ]
-        real_label = convert_optical_label(optical_label=test_label)[0]
+        # convert the fashion mnist labels to strings
+        predicted_label = convert_fashion_mnist_label(output_test[3])
+        real_label = convert_fashion_mnist_label(output_test[4])
 
         # plot the image, prediction and label
-        # create the figure
-        figure, axis = plt.subplots(1, 3, figsize=(30, 8))
-
-        # plot the initial image
-        axis[0].set_title(
-            f"Input Image: " f"{convert_fashion_mnist_label(real_label)}"
+        plot_model_testing(
+            input_image=output_test[0],
+            predicted_image=output_test[1],
+            label_image=output_test[2],
+            input_image_title=f"Input Image: {real_label}",
+            predicted_image_title=f"Prediction: {predicted_label}",
+            label_image_title=f"Label: {real_label}",
         )
-        c = axis[0].imshow(test_image, cmap="jet")
-        figure.colorbar(mappable=c)
-
-        # plot the prediction
-        axis[1].set_title(
-            f"Prediction: " f"{convert_fashion_mnist_label(real_prediction)}"
-        )
-        a = axis[1].imshow(test_prediction, cmap="inferno")
-        figure.colorbar(mappable=a)
-
-        # plot the label
-        axis[2].set_title(
-            f"Label: " f"{convert_fashion_mnist_label(real_label)}"
-        )
-        b = axis[2].imshow(test_label, cmap="inferno")
-        figure.colorbar(mappable=b)
-        plt.savefig(
-            f"results/model_predictions/fashion_mnist"
-            f"/model_prediction_{j}.png"
-        )
-        plt.show()

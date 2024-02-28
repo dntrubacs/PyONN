@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import Optional
+import torch
+from pyonn_data.processing import convert_optical_label
+from pyonn_data.datasets import OpticalImageDataset
 
 
 def find_coordinate_matrix(
@@ -235,6 +238,95 @@ def plot_complex_amplitude_map(
     axis[1].set_ylabel("$y$ [mm]")
     figure.colorbar(mappable=phase_map)
     plt.show()
+
+
+def test_model_on_image(
+    model: torch.nn.Module,
+    optical_image: torch.Tensor,
+    optical_label: torch.Tensor,
+) -> tuple:
+    """Tests a model on a given optical image and optical label.
+
+    Args:
+        model: Deep diffractive neural network. Must be made as a torch model.
+            (see the examples module).
+        optical_image: Optical image used for the model prediction.
+            (must be an optical image generated with the
+            pyonn_data.processing.create_optical_images function).
+        optical_label: Optical label used to find the real label
+            (must be an optical image generated with the
+            pyonn_data.processing.create_optical_labels function).
+
+    Returns:
+        Tuple containing the optical image, prediction and optical label
+        (converted to numpy arrays) and the predicted and real labels.
+    """
+    # get the prediction of the model
+    predicted_label = model(optical_image)
+
+    # convert all tensors to numpy arrays
+    np_optical_image = optical_image.detach().cpu().numpy()
+    np_predicted_label = predicted_label.detach().cpu().numpy()
+    np_optical_label = optical_label.detach().cpu().numpy()
+
+    # get the 'real' labels (integer not optical images
+    real_prediction = convert_optical_label(optical_label=np_predicted_label)[
+        0
+    ]
+    real_label = convert_optical_label(optical_label=np_optical_label)[0]
+
+    # return the given image, label and predictions
+    return (
+        np_optical_image,
+        np_predicted_label,
+        np_optical_label,
+        real_prediction,
+        real_label,
+    )
+
+
+def test_model_on_dataset(
+    model: torch.nn.Module, dataset: OpticalImageDataset
+) -> float:
+    """Test the model on a given dataset.
+
+    Args:
+        model: Deep diffractive neural network. Must be made as a torch model.
+            (see the examples module).
+        dataset: Optical Dataset (must be made with pyonn_data.datasets
+        module).
+
+    Returns:
+        The accuracy of the model on the given dataset.
+    """
+    # number of samples in the dataset
+    n_samples = dataset.__len__()
+
+    # number of correct predictions
+    n_correct = 0
+
+    # go through each example and find the accuracy
+    for n_sample in range(n_samples):
+        optical_image, real_optical_label = dataset[n_sample]
+        output_train = test_model_on_image(
+            model=model,
+            optical_image=optical_image,
+            optical_label=real_optical_label,
+        )
+        predicted_label = output_train[3]
+        real_label = output_train[4]
+
+        if predicted_label == real_label:
+            n_correct += 1
+        if n_sample % 1000 == 0 and n_sample > 1:
+            print(
+                f"Sample number: {n_sample}. "
+                f"Correct predictions until now: {n_correct}. "
+                f"Accuracy until now: {n_correct / n_sample * 100} %"
+            )
+
+    # return the accuracy
+    return n_correct / n_samples
 
 
 def plot_model_testing(

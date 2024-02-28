@@ -152,9 +152,3 @@ def find_phase_change(
     phase_change = phase_change - torch.pi
 
     return phase_change
-
-
-if __name__ == "__main__":
-    debug_refractive_indices = torch.tensor(
-        [[3.28536, 4.0493, 3.28536], [3.28536, 4.0493, 3.28536]], device=device
-    )

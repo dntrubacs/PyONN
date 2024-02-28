@@ -4,9 +4,12 @@ on the MNIST dataset."""
 
 import numpy as np
 import os
-from pyonn.utils import plot_model_testing, plot_training_histogram
+from pyonn.utils import (
+    plot_model_testing,
+    plot_training_histogram,
+    test_model_on_image,
+)
 from pyonn_data.datasets import OpticalImageDataset
-from pyonn_data.processing import convert_optical_label
 from pyonn.prebuilts import FiveLayerDiffractiveNN
 import torch
 from torch.utils.data import DataLoader, random_split
@@ -50,7 +53,7 @@ criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 5
+n_epochs = 1
 
 # a list of all train and validation losses after an epoch
 train_losses = []
@@ -111,33 +114,24 @@ for epoch in range(n_epochs):
 with torch.no_grad():
     for j in range(10):
         # get a random index
-        random_index = np.random.randint(low=0, high=1000)
+        random_index = np.random.randint(low=0, high=54000)
 
         # get a random image and label
         test_image, test_label = train_dataset[random_index]
 
-        # get the prediction for images
-        test_prediction = model(test_image)
-
-        # convert them to numpy
-        test_image = test_image.detach().cpu().numpy()
-        test_label = test_label.detach().cpu().numpy()
-        test_prediction = test_prediction.detach().cpu().numpy()
-
-        # get the 'real' labels (integer not optical images
-        real_prediction = convert_optical_label(optical_label=test_prediction)[
-            0
-        ]
-        real_label = convert_optical_label(optical_label=test_label)[0]
+        # test the model on the random data
+        output_test = test_model_on_image(
+            model=model, optical_image=test_image, optical_label=test_label
+        )
 
         # plot the image, prediction and label
         plot_model_testing(
-            input_image=test_image,
-            predicted_image=test_prediction,
-            label_image=test_label,
-            input_image_title=f"Input Image: {real_label}",
-            predicted_image_title=f"Prediction: {real_prediction}",
-            label_image_title=f"Label: {real_label}",
+            input_image=output_test[0],
+            predicted_image=output_test[1],
+            label_image=output_test[2],
+            input_image_title=f"Input Image: {output_test[4]}",
+            predicted_image_title=f"Prediction: {output_test[3]}",
+            label_image_title=f"Label: {output_test[3]}",
         )
 
 # save the trained model

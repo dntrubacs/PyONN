@@ -433,37 +433,3 @@ class DetectorLayer(torch.nn.Module):
         plt.ylabel("$y$ [m]")
         figure.colorbar(mappable=plot_map)
         plt.show()
-
-
-if __name__ == "__main__":
-    from utils import create_square_grid_pattern
-
-    # create a square grid pattern centred on [0, 0] with pixel size 1 um
-    # and pixel number 20 (400 pixels in total)
-    square_grid_pattern = create_square_grid_pattern(
-        center_coordinates=np.array([0, 0]),
-        pixel_length=0.8e-6,
-        pixel_number=100,
-        pixel_separation=0.0,
-        grid_z_coordinate=0,
-    )
-
-    # the x and y coordinates
-    debug_x_coordinates = square_grid_pattern[1]
-    debug_y_coordinates = square_grid_pattern[2]
-
-    # retain only the x coordinates of the pattern (necessary for the
-    # meshgrid)
-    # used only for testing and debugging
-    # try the forward pass
-    debug_layer = InputDiffractiveLayer(
-        n_size=100,
-        x_coordinates=debug_x_coordinates,
-        y_coordinates=debug_y_coordinates,
-        z_coordinate=0.0,
-        z_next=1.0,
-        wavelength=1.55e-6,
-    )
-
-    # plot the amplitude and phase map
-    debug_layer.plot_complex_amplitude_map()
