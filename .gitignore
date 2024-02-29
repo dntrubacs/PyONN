@@ -8,6 +8,9 @@
 # ignore all txt files
 *.txt
 
+# ignore the saved models folder
+saved_models*
+
 # ignore the data folder (used only to keep local data)
 data*
 
