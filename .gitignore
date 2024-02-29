@@ -14,8 +14,8 @@ saved_models*
 # ignore the data folder (used only to keep local data)
 data*
 
-# ignore the test script
-test.*
+# ignore the tests folder
+tests*
 
 # ignore the .idea/ folder
 .idea*
