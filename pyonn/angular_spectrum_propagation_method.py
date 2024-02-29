@@ -175,6 +175,9 @@ def plot_real_maps(
     intensity_map, phase_map = find_real_maps(
         complex_amplitude_map=complex_amplitude_map, normalized=normalized
     )
+    # rotate the arrays by 180 degrees (better for plotting)
+    intensity_map = np.rot90(intensity_map, k=2)
+    phase_map = np.rot90(phase_map, k=2)
 
     # create the figure
     figure, axis = plt.subplots(1, 2, figsize=(20, 8))

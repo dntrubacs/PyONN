@@ -333,6 +333,8 @@ def plot_model_testing(
     input_image: np.ndarray,
     predicted_image: np.ndarray,
     label_image: np.ndarray,
+    x_coordinates: np.ndarray,
+    y_coordinates: np.ndarray,
     input_image_title: str = "Input image",
     predicted_image_title: str = "Predicted",
     label_image_title: str = "Label",
@@ -348,28 +350,52 @@ def plot_model_testing(
         label_image: Label of the input image (must be an optical label
             generated with the pyonn_data.processing.create_optical_labels
             function).
+        x_coordinates: Numpy array representing the x coordinates of all
+             pixels. Must be of shape (n_pixels, ).
+        y_coordinates: Numpy array representing the x coordinates of all
+             pixels. Must be of shape (n_pixels, ).
         input_image_title: Title for the figure containing the input image.
         predicted_image_title: Title for the figure containing the predicted
             image.
         label_image_title: Title for the figure containing the label.
         save_path: The path where to save the figure.
     """
+    # create a meshgrid for plotting
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
+
     # create the figure
     figure, axis = plt.subplots(1, 3, figsize=(30, 8))
 
+    # rotate the arrays by 180 degrees (better for plotting)
+    input_image = np.rot90(input_image, k=2)
+    predicted_image = np.rot90(predicted_image, k=2)
+    label_image = np.rot90(label_image, k=2)
+
     # plot the input image
     axis[0].set_title(input_image_title)
-    input_image_map = axis[0].imshow(input_image, cmap="jet")
+    input_image_map = axis[0].pcolormesh(
+        x_mesh, y_mesh, input_image, cmap="jet"
+    )
+    axis[0].set_xlabel("$x$ [m]")
+    axis[0].set_ylabel("$y$ [m]")
     figure.colorbar(mappable=input_image_map)
 
     # plot the predicted image
     axis[1].set_title(predicted_image_title)
-    predicted_image_map = axis[1].imshow(predicted_image, cmap="inferno")
+    predicted_image_map = axis[1].pcolormesh(
+        x_mesh, y_mesh, predicted_image, cmap="inferno"
+    )
+    axis[1].set_xlabel("$x$ [m]")
+    axis[1].set_ylabel("$y$ [m]")
     figure.colorbar(mappable=predicted_image_map)
 
     # plot the label
     axis[2].set_title(label_image_title)
-    label_image_map = axis[2].imshow(label_image, cmap="inferno")
+    label_image_map = axis[2].pcolormesh(
+        x_mesh, y_mesh, label_image, cmap="inferno"
+    )
+    axis[2].set_xlabel("$x$ [m]")
+    axis[2].set_ylabel("$y$ [m]")
     figure.colorbar(mappable=label_image_map)
 
     # if required, save the figure

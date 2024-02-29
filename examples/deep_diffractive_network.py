@@ -20,10 +20,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
+    file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
+    file="data/mnist_processed_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset f
@@ -135,4 +135,4 @@ with torch.no_grad():
         )
 
 # save the trained model
-torch.save(model.state_dict(), "dnn_models/fashion_mnist_model_5_layers_v1")
+torch.save(model.state_dict(), "saved_models/mnist_model_5_layers_v0")

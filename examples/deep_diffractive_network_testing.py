@@ -7,7 +7,6 @@ import numpy as np
 import os
 from pyonn.prebuilts import FiveLayerDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
-from pyonn_data.processing import convert_fashion_mnist_label
 from pyonn.utils import (
     test_model_on_image,
     plot_model_testing,
@@ -22,16 +21,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
+    file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
+    file="data/mnist_processed_data/train_labels", allow_pickle=True
 )
 test_images = np.load(
-    file="data/fashion_mnist_processed_data/test_images", allow_pickle=True
+    file="data/mnist_processed_data/test_images", allow_pickle=True
 )
 test_labels = np.load(
-    file="data/fashion_mnist_processed_data/test_labels", allow_pickle=True
+    file="data/mnist_processed_data/test_labels", allow_pickle=True
 )
 
 # create an optical image dataset
@@ -45,7 +44,8 @@ test_dataset = OpticalImageDataset(
 
 # load the trained weights
 model = FiveLayerDiffractiveNN().to(device)
-model.load_state_dict(torch.load("dnn_models/fashion_mnist_model_5_layers_v2"))
+model.load_state_dict(torch.load("saved_models/mnist_model_5_layers_v0"))
+
 
 # find the accuracy for the training data
 print("Finding the accuracy on training data")
@@ -73,15 +73,21 @@ with torch.no_grad():
         )
 
         # convert the fashion mnist labels to strings
-        predicted_label = convert_fashion_mnist_label(output_test[3])
-        real_label = convert_fashion_mnist_label(output_test[4])
+        predicted_label = output_test[3]
+        real_label = output_test[4]
 
         # plot the image, prediction and label
         plot_model_testing(
             input_image=output_test[0],
             predicted_image=output_test[1],
             label_image=output_test[2],
+            x_coordinates=model.input_layer.x_coordinates,
+            y_coordinates=model.input_layer.y_coordinates,
             input_image_title=f"Input Image: {real_label}",
             predicted_image_title=f"Prediction: {predicted_label}",
             label_image_title=f"Label: {real_label}",
+            save_path=f"results/model_predictions/mnist_predictions/"
+            f"model_predictions_{j}.png",
         )
+
+        x = input("Press to continue")

@@ -24,6 +24,7 @@ import numpy as np
 import torch
 from pyonn.angular_spectrum_propagation_method import (
     propagate_complex_amplitude_map,
+    plot_real_maps,
 )
 from pyonn.utils import plot_complex_amplitude_map
 from typing import Optional
@@ -122,6 +123,20 @@ class DiffractiveLayerCommon(torch.nn.Module):
         be overwritten."""
         pass
 
+    def _plot_output_map(self, output_map: torch.Tensor) -> None:
+        """Plots the intensity map of the output.
+
+        Should be implemented only after the output map (output of the
+        forward pass) has been implemented.
+
+        Args:
+            output_map: Torch tensor representing the output of the forward
+                pass.
+        """
+        plot_real_maps(
+            complex_amplitude_map=output_map, x_coordinates=self.x_coordinates
+        )
+
 
 class StaticDiffractiveLayer(DiffractiveLayerCommon):
     """Diffractive Layer but the weights are kept as static.
@@ -165,6 +180,10 @@ class StaticDiffractiveLayer(DiffractiveLayerCommon):
         # the wavelength of light
         self.wavelength = wavelength
 
+        # output map (output of the forward pass). Stored for visual feedback
+        # of the output of the layer
+        self.output_map = None
+
     def plot_weights_map(self) -> None:
         """Plots the intensity and phase map of the weights."""
         self._plot_complex_map(weights_map=self.weights_static)
@@ -194,14 +213,22 @@ class StaticDiffractiveLayer(DiffractiveLayerCommon):
             distance=self.z_next - self.z_coordinate,
         )
 
+        # store the output map
+        self.output_map = propagated_spacial_spectrum
+
         # return the propagated complex amplitude map
         return propagated_spacial_spectrum
+
+    def plot_output_map(self) -> None:
+        """Plots the output of the forward pass as intensity and phase
+        maps."""
+        self._plot_output_map(output_map=self.output_map)
 
 
 class InputDiffractiveLayer(DiffractiveLayerCommon):
     """Input layer for Diffractive Networks.
 
-    This layer does not require weights and it can be considered as the
+    This layer does not require weights, and it can be considered as the
     'source of light' in a Deep Diffractive Neural Network.
     For a full documentation about attributes see the
     DiffractiveLayerCommon class.
@@ -235,6 +262,10 @@ class InputDiffractiveLayer(DiffractiveLayerCommon):
         # the wavelength of light
         self.wavelength = wavelength
 
+        # output map (output of the forward pass). Stored for visual feedback
+        # of the output of the layer
+        self.output_map = None
+
     def plot_complex_amplitude_map(self) -> None:
         """Plots the intensity and phase map of the weights."""
         # make a numpy copy of complex amplitude map
@@ -266,8 +297,17 @@ class InputDiffractiveLayer(DiffractiveLayerCommon):
             distance=self.z_next - self.z_coordinate,
         )
 
+        # output map (output of the forward pass). Stored for visual feedback
+        # of the output of the layer
+        self.output_map = propagated_spatial_spectrum
+
         # return the propagated complex amplitude map
         return propagated_spatial_spectrum
+
+    def plot_output_map(self) -> None:
+        """Plots the output of the forward pass as intensity and phase
+        maps."""
+        self._plot_output_map(output_map=self.output_map)
 
 
 class DiffractiveLayer(DiffractiveLayerCommon):
@@ -303,6 +343,10 @@ class DiffractiveLayer(DiffractiveLayerCommon):
 
         # the wavelength of light
         self.wavelength = wavelength
+
+        # output map (output of the forward pass). Stored for visual feedback
+        # of the output of the layer
+        self.output_map = None
 
     def _clip_weights(self) -> torch.Tensor:
         # always clip the weights to have an absolute values smaller than 1
@@ -352,8 +396,16 @@ class DiffractiveLayer(DiffractiveLayerCommon):
             distance=self.z_next - self.z_coordinate,
         )
 
+        # store the output map
+        self.output_map = propagated_complex_amplitude_map
+
         # return the propagated complex amplitude map
         return propagated_complex_amplitude_map
+
+    def plot_output_map(self) -> None:
+        """Plots the output of the forward pass as intensity and phase
+        maps."""
+        self._plot_output_map(output_map=self.output_map)
 
 
 class DetectorLayer(torch.nn.Module):
