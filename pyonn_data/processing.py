@@ -40,7 +40,8 @@ def create_optical_images(
 
     # resize every image in the dataset
     for i in range(data.shape[0]):
-        processed_data[i] = cv.resize(data[i], image_size)
+        # flip the image upside down (necessary for plotting)
+        processed_data[i] = np.flipud(cv.resize(data[i], image_size))
 
     # save the data id necessary
     if saved_data_path is not None:
@@ -96,8 +97,8 @@ def generate_optical_label(label: int) -> np.ndarray:
     if label == 9:
         processed_label[90:110, 90:110] = 1
 
-    # return the processed label
-    return processed_label
+    # flip the image upside down return the processed label
+    return np.flipud(processed_label)
 
 
 def convert_optical_label(optical_label: np.ndarray) -> tuple:

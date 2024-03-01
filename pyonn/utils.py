@@ -366,11 +366,6 @@ def plot_model_testing(
     # create the figure
     figure, axis = plt.subplots(1, 3, figsize=(30, 8))
 
-    # rotate the arrays by 180 degrees (better for plotting)
-    input_image = np.rot90(input_image, k=2)
-    predicted_image = np.rot90(predicted_image, k=2)
-    label_image = np.rot90(label_image, k=2)
-
     # plot the input image
     axis[0].set_title(input_image_title)
     input_image_map = axis[0].pcolormesh(

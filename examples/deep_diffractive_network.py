@@ -10,7 +10,7 @@ from pyonn.utils import (
     test_model_on_image,
 )
 from pyonn_data.datasets import OpticalImageDataset
-from pyonn.prebuilts import FiveLayerDiffractiveNN
+from pyonn.prebuilts import ReLUDiffractiveNN
 import torch
 from torch.utils.data import DataLoader, random_split
 
@@ -46,14 +46,14 @@ validation_loader = DataLoader(
 )
 
 # build the model and move to cuda if available
-model = FiveLayerDiffractiveNN().to(device)
+model = ReLUDiffractiveNN().to(device)
 
 # loss and optimizer
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 50
+n_epochs = 10
 
 # a list of all train and validation losses after an epoch
 train_losses = []
@@ -129,10 +129,12 @@ with torch.no_grad():
             input_image=output_test[0],
             predicted_image=output_test[1],
             label_image=output_test[2],
+            x_coordinates=model.input_layer.x_coordinates,
+            y_coordinates=model.input_layer.y_coordinates,
             input_image_title=f"Input Image: {output_test[4]}",
             predicted_image_title=f"Prediction: {output_test[3]}",
             label_image_title=f"Label: {output_test[3]}",
         )
 
 # save the trained model
-torch.save(model.state_dict(), "saved_models/mnist_model_5_layers_v0")
+torch.save(model.state_dict(), "saved_models/mnist_model_relu_v0")

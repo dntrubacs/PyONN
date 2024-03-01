@@ -9,6 +9,7 @@ from pyonn.diffractive_layers import (
     InputDiffractiveLayer,
     DetectorLayer,
     DiffractiveLayer,
+    DiffractiveReLU,
 )
 import numpy as np
 import torch
@@ -106,6 +107,95 @@ class FiveLayerDiffractiveNN(torch.nn.Module):
         x = self.diffractive_layer_0(x)
         x = self.diffractive_layer_1(x)
         x = self.diffractive_layer_2(x)
+        x = self.diffractive_layer_3(x)
+        x = self.diffractive_layer_4(x)
+        x = self.detector_layer(x)
+        return x
+
+
+class ReLUDiffractiveNN(torch.nn.Module):
+    """Diffractive Neural Network consisting of 5 layers.
+
+    The wavelength of light is set at 1.55 um, the neuron size is always
+    120 and the distance between 2 layers is always 10 um.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.wavelength = 1.55e-6
+        self.neuron_size = 120
+        self.x_coordinates = x_coordinates
+
+        # input layer used to propagate optical images
+        self.input_layer = InputDiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=0,
+            z_next=10e-6,
+        )
+
+        # diffractive layers
+        self.diffractive_layer_0 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=10e-6,
+            z_next=20e-6,
+        )
+        self.diffractive_layer_1 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=20e-6,
+            z_next=30e-6,
+        )
+        self.diffractive_layer_2 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=30e-6,
+            z_next=40e-6,
+        )
+        self.diffractive_layer_3 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=40e-6,
+            z_next=50e-6,
+        )
+        self.diffractive_layer_4 = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=50e-6,
+            z_next=60e-6,
+        )
+
+        # detector layer used to measure the output intensity
+        self.detector_layer = DetectorLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            z_coordinate=60e-6,
+        )
+        self.relu = DiffractiveReLU(alpha=0.01)
+
+    # the forward pass
+    def forward(self, x) -> torch.Tensor:
+        x = self.input_layer(x)
+        x = self.diffractive_layer_0(x)
+        x = self.relu(x)
+        x = self.diffractive_layer_1(x)
+        x = self.relu(x)
+        x = self.diffractive_layer_2(x)
+        x = self.relu(x)
         x = self.diffractive_layer_3(x)
         x = self.diffractive_layer_4(x)
         x = self.detector_layer(x)

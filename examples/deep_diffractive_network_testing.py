@@ -5,7 +5,7 @@ module is to test already trained models.
 
 import numpy as np
 import os
-from pyonn.prebuilts import FiveLayerDiffractiveNN
+from pyonn.prebuilts import ReLUDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn.utils import (
     test_model_on_image,
@@ -43,8 +43,8 @@ test_dataset = OpticalImageDataset(
 )
 
 # load the trained weights
-model = FiveLayerDiffractiveNN().to(device)
-model.load_state_dict(torch.load("saved_models/mnist_model_5_layers_v0"))
+model = ReLUDiffractiveNN().to(device)
+model.load_state_dict(torch.load("saved_models/mnist_model_relu_v0"))
 
 
 # find the accuracy for the training data

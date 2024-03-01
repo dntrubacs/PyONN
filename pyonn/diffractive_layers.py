@@ -485,3 +485,23 @@ class DetectorLayer(torch.nn.Module):
         plt.ylabel("$y$ [m]")
         figure.colorbar(mappable=plot_map)
         plt.show()
+
+
+class DiffractiveReLU(torch.nn.Module):
+    """ReLU activation function for diffractive layers"""
+
+    def __init__(self, alpha: float) -> None:
+        super().__init__()
+        self.alpha = alpha
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        new_map = torch.clamp(torch.abs(x), min=self.alpha)
+        new_map = new_map / self.alpha - 1
+        new_map = torch.divide(new_map, new_map)
+        # replace nan with zero
+        new_map = torch.nan_to_num(new_map)
+
+        # new output
+        new_output = torch.mul(x, new_map)
+
+        return new_output
