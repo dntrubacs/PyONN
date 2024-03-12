@@ -20,10 +20,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/mnist_processed_data/train_images", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_processed_data/train_labels", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset f
@@ -53,7 +53,7 @@ criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 10
+n_epochs = 50
 
 # a list of all train and validation losses after an epoch
 train_losses = []
@@ -137,4 +137,4 @@ with torch.no_grad():
         )
 
 # save the trained model
-torch.save(model.state_dict(), "saved_models/mnist_model_relu_v0")
+torch.save(model.state_dict(), "saved_models/fashion_mnist_model_relu_v0")

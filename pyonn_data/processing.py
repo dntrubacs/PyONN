@@ -1,5 +1,5 @@
 """ Created by Daniel-Iosif Trubacs 25 February 2024. The purpose fo this
-module is to process images datasets so they can be feed into an optical
+module is to process images datasets, so they can be feed into an optical
 neural network."""
 
 import idx2numpy
@@ -118,13 +118,13 @@ def convert_optical_label(optical_label: np.ndarray) -> tuple:
     detector_regions = np.zeros(shape=(10,))
 
     # get the region intensity average for the 0 label
-    detector_regions[0] = np.mean(optical_label[10:30, 10:30])
+    detector_regions[0] = np.mean(optical_label[90:110, 10:30])
 
     # get the region intensity average for the 1 label
-    detector_regions[1] = np.mean(optical_label[10:30, 50:70])
+    detector_regions[1] = np.mean(optical_label[90:110, 50:70])
 
     # get the region intensity average for the 2 label
-    detector_regions[2] = np.mean(optical_label[10:30, 90:110])
+    detector_regions[2] = np.mean(optical_label[90:110, 90:110])
 
     # get the region intensity average for the 3 label
     detector_regions[3] = np.mean(optical_label[50:70, 5:25])
@@ -139,13 +139,13 @@ def convert_optical_label(optical_label: np.ndarray) -> tuple:
     detector_regions[6] = np.mean(optical_label[50:70, 95:115])
 
     # get the region intensity average for the 7 label
-    detector_regions[7] = np.mean(optical_label[90:110, 10:30])
+    detector_regions[7] = np.mean(optical_label[10:30, 10:30])
 
     # get the region intensity average for the 8 label
-    detector_regions[8] = np.mean(optical_label[90:110, 50:70])
+    detector_regions[8] = np.mean(optical_label[10:30, 50:70])
 
     # get the region intensity average for the 9 label
-    detector_regions[9] = np.mean(optical_label[90:110, 90:110])
+    detector_regions[9] = np.mean(optical_label[10:30, 90:110])
 
     return (
         np.argmax(detector_regions),
