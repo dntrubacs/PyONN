@@ -5,14 +5,13 @@ module is to test already trained models.
 
 import numpy as np
 import os
-from pyonn.prebuilts import ReLUDiffractiveNN
+from pyonn.prebuilts import InverseReLUDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn.utils import (
     test_model_on_image,
     plot_model_testing,
     test_model_on_dataset,
 )
-from pyonn_data.processing import convert_fashion_mnist_label
 import torch
 
 
@@ -23,22 +22,28 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 
 train_images = np.load(
-    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
+    file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
+    file="data/mnist_processed_data/train_labels", allow_pickle=True
 )
 
 test_images = np.load(
-    file="data/fashion_mnist_processed_data/test_images", allow_pickle=True
+    file="data/mnist_processed_data/test_images", allow_pickle=True
 )
 test_labels = np.load(
-    file="data/fashion_mnist_processed_data/test_labels", allow_pickle=True
+    file="data/mnist_processed_data/test_labels", allow_pickle=True
 )
 
 # load the trained weights
-model = ReLUDiffractiveNN().to(device)
-model.load_state_dict(torch.load("saved_models/fashion_mnist_model_relu_v0"))
+model = InverseReLUDiffractiveNN().to(device)
+model.load_state_dict(
+    torch.load(
+        "saved_models/fully_optical/"
+        "mnist_model_inverse_relu_"
+        "5_layers_50_epochs"
+    )
+)
 
 # create an optical image dataset
 train_dataset = OpticalImageDataset(
@@ -80,9 +85,9 @@ with torch.no_grad():
         real_label = output_test[4]
 
         # titles used for plotting
-        input_image_label = convert_fashion_mnist_label(real_label)
-        predicted_image_label = convert_fashion_mnist_label(predicted_label)
-        labeled_image_label = convert_fashion_mnist_label(real_label)
+        input_image_label = real_label
+        predicted_image_label = predicted_label
+        labeled_image_label = real_label
 
         # plot the image, prediction and label
         plot_model_testing(
@@ -93,7 +98,7 @@ with torch.no_grad():
             y_coordinates=model.input_layer.y_coordinates,
             input_image_title=f"Input Image: " f"{input_image_label}",
             predicted_image_title=f"Prediction: " f"{predicted_image_label}",
-            label_image_title=f"Label: " f"{labeled_image_label}",
-            save_path=f"results/model_predictions/fashion_mnist_predictions/"
-            f"model_predictions_{j}.png",
+            label_image_title=f"Label: " f"{labeled_image_label}"
+            # save_path=f"results/model_predictions/fashion_mnist_predictions/"
+            # f"model_predictions_{j}.png",
         )

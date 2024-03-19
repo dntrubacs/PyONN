@@ -488,7 +488,10 @@ class DetectorLayer(torch.nn.Module):
 
 
 class DiffractiveReLU(torch.nn.Module):
-    """ReLU activation function for diffractive layers"""
+    """ReLU activation function for diffractive layers.
+
+    This layer cuts all intensities lower than a given value (alpha).
+    """
 
     def __init__(self, alpha: float) -> None:
         super().__init__()
@@ -497,6 +500,29 @@ class DiffractiveReLU(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         new_map = torch.clamp(torch.abs(x), min=self.alpha)
         new_map = new_map / self.alpha - 1
+        new_map = torch.divide(new_map, new_map)
+        # replace nan with zero
+        new_map = torch.nan_to_num(new_map)
+
+        # new output
+        new_output = torch.mul(x, new_map)
+
+        return new_output
+
+
+class DiffractiveInverseReLU(torch.nn.Module):
+    """Inverse ReLU activation function for diffractive layers.
+
+    This layer cuts all the values higher than a given value (beta).
+    """
+
+    def __init__(self, beta: float) -> None:
+        super().__init__()
+        self.beta = beta
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        new_map = torch.clamp(torch.abs(x), max=self.beta)
+        new_map = new_map / self.beta - 1
         new_map = torch.divide(new_map, new_map)
         # replace nan with zero
         new_map = torch.nan_to_num(new_map)
