@@ -8,9 +8,7 @@ import os
 from pyonn.prebuilts import OpticalEncoder
 from pyonn_data.datasets import HybridImageDataset
 from pyonn.utils import (
-    test_model_on_image,
-    plot_model_testing,
-    test_model_on_hybrid_dataset,
+    plot_optical_encoder,
 )
 import torch
 
@@ -56,26 +54,40 @@ test_dataset = HybridImageDataset(
 
 # find the accuracy for the training data
 print("Finding the accuracy on training data")
-train_accuracy = test_model_on_hybrid_dataset(
-    model=model, dataset=train_dataset
-)
+# train_accuracy = test_model_on_hybrid_dataset(
+#   model=model, dataset=train_dataset
+# )
 
 # find the accuracy for the test data
 print("Finding the accuracy on test data")
-test_accuracy = test_model_on_hybrid_dataset(model=model, dataset=test_dataset)
+# test_accuracy = test_model_on_hybrid_dataset(model=model,
+# dataset=test_dataset)
 
-print(f"Train accuracy: {train_accuracy*100} %")
-print(f"Test accuracy: {test_accuracy*100} %")
+# print(f"Train accuracy: {train_accuracy*100} %")
+# print(f"Test accuracy: {test_accuracy*100} %")
 
 
 with torch.no_grad():
-    for j in range(50):
+    for j in range(10):
         # get a random index
         random_index = np.random.randint(low=0, high=10000)
 
         # get a random image and label
         test_image, test_label = test_dataset[random_index]
 
+        plot_optical_encoder(
+            model=model,
+            optical_image=test_image,
+            label=test_label,
+            x_coordinates=model.input_layer.x_coordinates,
+            y_coordinates=model.input_layer.y_coordinates,
+        )
+
+    #   model.input_layer.plot_output_map()
+    #   model.diffractive_layer.plot_output_map()
+    #   model.detector_layer.plot_intensity_map()
+
+    """
         # test the model on the random data
         output_test = test_model_on_image(
             model=model, optical_image=test_image, optical_label=test_label
@@ -103,3 +115,4 @@ with torch.no_grad():
             # save_path=f"results/model_predictions/fashion_mnist_predictions/"
             # f"model_predictions_{j}.png",
         )
+    """

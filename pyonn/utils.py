@@ -371,6 +371,75 @@ def test_model_on_hybrid_dataset(
     return n_correct / n_samples
 
 
+def plot_optical_encoder(
+    model: torch.nn.Module,
+    optical_image: torch.tensor,
+    label: float,
+    x_coordinates: np.ndarray,
+    y_coordinates: np.ndarray,
+) -> None:
+    """
+
+    Args:
+        model:
+        optical_image:
+        label:
+
+    Returns:
+
+    """
+    output = torch.nn.functional.softmax(model(optical_image))
+
+    # get the predicted label
+    output = output.detach().cpu().numpy()
+    predicted_label = np.argmax(output)
+
+    detector_intensity_map = model.detector_layer.intensity_map
+    max_pool = model.max_pool
+    max_pool_out = max_pool(detector_intensity_map.view(1, 120, 120))
+    max_pool_out = max_pool_out.view(40, 40)
+    print(max_pool_out.shape)
+
+    # create a meshgrid for plotting
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
+
+    # create the figure
+    figure, axis = plt.subplots(1, 3, figsize=(30, 8))
+
+    # plot the input image
+    axis[0].set_title(f"Prediction: {predicted_label}. Label: {label}")
+    input_image_map = axis[0].pcolormesh(
+        x_mesh, y_mesh, optical_image.detach().cpu().numpy(), cmap="jet"
+    )
+    axis[0].set_xlabel("$x$ [m]")
+    axis[0].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=input_image_map)
+
+    # plot the predicted image
+    axis[1].set_title("Detector Output")
+    predicted_image_map = axis[1].pcolormesh(
+        x_mesh,
+        y_mesh,
+        detector_intensity_map.detach().cpu().numpy(),
+        cmap="inferno",
+    )
+
+    axis[1].set_xlabel("$x$ [m]")
+    axis[1].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=predicted_image_map)
+
+    # plot the image after max pool
+    axis[2].set_title("Max Pooling")
+    predicted_image_map = axis[2].imshow(
+        max_pool_out.detach().cpu().numpy(), cmap="inferno"
+    )
+
+    axis[2].set_xlabel("$x$ ")
+    axis[2].set_ylabel("$y$ ")
+    figure.colorbar(mappable=predicted_image_map)
+    plt.show()
+
+
 def plot_model_testing(
     input_image: np.ndarray,
     predicted_image: np.ndarray,
