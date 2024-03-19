@@ -5,12 +5,12 @@ module is to test already trained models.
 
 import numpy as np
 import os
-from pyonn.prebuilts import InverseReLUDiffractiveNN
-from pyonn_data.datasets import OpticalImageDataset
+from pyonn.prebuilts import OpticalEncoder
+from pyonn_data.datasets import HybridImageDataset
 from pyonn.utils import (
     test_model_on_image,
     plot_model_testing,
-    test_model_on_dataset,
+    test_model_on_hybrid_dataset,
 )
 import torch
 
@@ -25,43 +25,44 @@ train_images = np.load(
     file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_processed_data/train_labels", allow_pickle=True
+    file="data/mnist_raw_data/train_labels", allow_pickle=True
 )
 
 test_images = np.load(
     file="data/mnist_processed_data/test_images", allow_pickle=True
 )
 test_labels = np.load(
-    file="data/mnist_processed_data/test_labels", allow_pickle=True
+    file="data/mnist_raw_data/test_labels", allow_pickle=True
 )
 
 # load the trained weights
-model = InverseReLUDiffractiveNN().to(device)
+model = OpticalEncoder().to(device)
 model.load_state_dict(
     torch.load(
-        "saved_models/fully_optical/"
-        "mnist_model_inverse_relu_"
-        "5_layers_50_epochs"
+        "saved_models/optical_encoders/"
+        "mnist_model_optical_encoder_100_epochs"
     )
 )
 
 # create an optical image dataset
-train_dataset = OpticalImageDataset(
-    optical_images=train_images, optical_labels=train_labels
+train_dataset = HybridImageDataset(
+    optical_images=train_images, scalar_labels=train_labels
 )
 
-test_dataset = OpticalImageDataset(
-    optical_images=test_images, optical_labels=test_labels
+test_dataset = HybridImageDataset(
+    optical_images=test_images, scalar_labels=test_labels
 )
 
 
 # find the accuracy for the training data
 print("Finding the accuracy on training data")
-train_accuracy = test_model_on_dataset(model=model, dataset=train_dataset)
+train_accuracy = test_model_on_hybrid_dataset(
+    model=model, dataset=train_dataset
+)
 
 # find the accuracy for the test data
 print("Finding the accuracy on test data")
-test_accuracy = test_model_on_dataset(model=model, dataset=test_dataset)
+test_accuracy = test_model_on_hybrid_dataset(model=model, dataset=test_dataset)
 
 print(f"Train accuracy: {train_accuracy*100} %")
 print(f"Test accuracy: {test_accuracy*100} %")

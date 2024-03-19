@@ -4,13 +4,10 @@ on the MNIST dataset."""
 
 import numpy as np
 import os
-from pyonn.utils import (
-    plot_model_testing,
-    plot_training_histogram,
-    test_model_on_image,
-)
-from pyonn_data.datasets import OpticalImageDataset
-from pyonn.prebuilts import InverseReLUDiffractiveNN
+from pyonn.utils import plot_training_histogram
+
+from pyonn_data.datasets import HybridImageDataset
+from pyonn.prebuilts import OpticalEncoder
 import torch
 from torch.utils.data import DataLoader, random_split
 
@@ -23,12 +20,12 @@ train_images = np.load(
     file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_processed_data/train_labels", allow_pickle=True
+    file="data/mnist_raw_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset f
-dataset = OpticalImageDataset(
-    optical_images=train_images, optical_labels=train_labels
+dataset = HybridImageDataset(
+    optical_images=train_images, scalar_labels=train_labels
 )
 
 # in this case the size of the data is 60000 images, so the dataset will
@@ -46,14 +43,14 @@ validation_loader = DataLoader(
 )
 
 # build the model and move to cuda if available
-model = InverseReLUDiffractiveNN().to(device)
+model = OpticalEncoder().to(device)
 
 # loss and optimizer
-criterion = torch.nn.MSELoss()
+criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 50
+n_epochs = 100
 
 # a list of all train and validation losses after an epoch
 train_losses = []
@@ -109,7 +106,7 @@ for epoch in range(n_epochs):
         training_losses=train_losses, validation_losses=validation_losses
     )
 
-
+"""
 # show 10 random predictions
 with torch.no_grad():
     for j in range(10):
@@ -135,11 +132,11 @@ with torch.no_grad():
             predicted_image_title=f"Prediction: {output_test[3]}",
             label_image_title=f"Label: {output_test[3]}",
         )
+"""
 
 # save the trained model
 torch.save(
     model.state_dict(),
-    f="saved_models/fully_optical/"
-    "mnist_model_inverse_relu_5_layers_"
-    "50_epochs",
+    f="saved_models/optical_encoders/"
+    "mnist_model_optical_encoder_100_epochs",
 )

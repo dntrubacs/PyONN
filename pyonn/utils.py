@@ -3,7 +3,7 @@ import numpy as np
 from typing import Optional
 import torch
 from pyonn_data.processing import convert_optical_label
-from pyonn_data.datasets import OpticalImageDataset
+from pyonn_data.datasets import OpticalImageDataset, HybridImageDataset
 
 
 def find_coordinate_matrix(
@@ -285,7 +285,7 @@ def test_model_on_image(
     )
 
 
-def test_model_on_dataset(
+def test_model_on_optical_dataset(
     model: torch.nn.Module, dataset: OpticalImageDataset
 ) -> float:
     """Test the model on a given dataset.
@@ -315,6 +315,48 @@ def test_model_on_dataset(
         )
         predicted_label = output_train[3]
         real_label = output_train[4]
+
+        if predicted_label == real_label:
+            n_correct += 1
+        if n_sample % 1000 == 0 and n_sample > 1:
+            print(
+                f"Sample number: {n_sample}. "
+                f"Correct predictions until now: {n_correct}. "
+                f"Accuracy until now: {n_correct / n_sample * 100} %"
+            )
+
+    # return the accuracy
+    return n_correct / n_samples
+
+
+def test_model_on_hybrid_dataset(
+    model: torch.nn.Module, dataset: HybridImageDataset
+) -> float:
+    """tests the model on a given dataset.
+
+    Args:
+        model:  Optical encoder. Must be made as a torch model.
+            (see the examples module).
+        dataset: Hybrid Dataset (must be made with pyonn_data.datasets
+        module).
+
+    Returns:
+        The accuracy of the model on the given dataset.
+    """
+    # number of samples in the dataset
+    n_samples = dataset.__len__()
+
+    # number of correct predictions
+    n_correct = 0
+
+    # go through each example and find the accuracy
+    for n_sample in range(n_samples):
+        optical_image, real_label = dataset[n_sample]
+        output = torch.nn.functional.softmax(model(optical_image))
+
+        # get the predicted label
+        output = output.detach().cpu().numpy()
+        predicted_label = np.argmax(output)
 
         if predicted_label == real_label:
             n_correct += 1

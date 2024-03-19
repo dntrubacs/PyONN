@@ -294,3 +294,96 @@ class InverseReLUDiffractiveNN(torch.nn.Module):
         x = self.inverse_relu(x)
         x = self.detector_layer(x)
         return x
+
+
+class OpticalEncoder(torch.nn.Module):
+    """Optical Encoder consisting of a Deep Diffractive Layer and normal
+    digital layers.
+
+    The architecture of the Network is: Input Layer (Diffractive) ->
+    Deep Diffractive Layer -> Detector (Diffractive) -> MaxPool -> FCC.
+
+    The wavelength of light is set at 1.55 um, the neuron size of the
+    Diffractive layer is 120 and the distance between 2 layers is always 10 um.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.wavelength = 1.55e-6
+        self.neuron_size = 120
+        self.x_coordinates = x_coordinates
+
+        # input layer used to propagate optical images
+        self.input_layer = InputDiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=0,
+            z_next=10e-6,
+        )
+
+        # diffractive layers
+        self.diffractive_layer = DiffractiveLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            z_coordinate=10e-6,
+            z_next=20e-6,
+        )
+
+        # detector layer
+        self.detector_layer = DetectorLayer(
+            n_size=self.neuron_size,
+            x_coordinates=self.x_coordinates,
+            y_coordinates=self.x_coordinates,
+            z_coordinate=20e-6,
+        )
+
+        # max pool layer
+        self.max_pool = torch.nn.MaxPool2d(kernel_size=3)
+
+        # linear layers
+        self.linear_0 = torch.nn.Linear(
+            in_features=40 * 40, out_features=256, dtype=torch.double
+        )
+        self.linear_1 = torch.nn.Linear(
+            in_features=256, out_features=256, dtype=torch.double
+        )
+        self.linear_2 = torch.nn.Linear(
+            in_features=256, out_features=10, dtype=torch.double
+        )
+
+        # relu activation
+        self.relu = torch.nn.ReLU()
+
+        # softmax activation
+        self.softmax = torch.nn.Softmax(dim=1)
+
+    # the forward pass
+    def forward(self, x) -> torch.Tensor:
+        # deep diffractive network
+        x = self.input_layer(x)
+        x = self.diffractive_layer(x)
+        x = self.detector_layer(x)
+
+        # reshape the vector to feed into the max pool layer
+        if len(x.shape) == 2:
+            x = torch.reshape(x, shape=(1, x.shape[0], x.shape[1]))
+        if len(x.shape) == 2:
+            x = torch.reshape(x, shape=(x.shape[0], 1, x.shape[1], x.shape[2]))
+
+        # max pool
+        x = self.max_pool(x)
+
+        # flatten the data to feed into FCC
+        x = torch.flatten(x, start_dim=1)
+
+        # FCC network
+        x = self.linear_0(x)
+        x = self.relu(x)
+        x = self.linear_1(x)
+        x = self.relu(x)
+        x = self.linear_2(x)
+        return x

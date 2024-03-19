@@ -3,7 +3,7 @@ module is to visualize the model diffractive layers and it's outputs."""
 
 import numpy as np
 import os
-from pyonn.prebuilts import FiveLayerDiffractiveNN, ReLUDiffractiveNN
+from pyonn.prebuilts import FiveLayerDiffractiveNN, InverseReLUDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn.diffractive_layers import DiffractiveInverseReLU
 from pyonn.utils import (
@@ -33,7 +33,7 @@ test_dataset = OpticalImageDataset(
 
 # load the trained weights
 normal_model = FiveLayerDiffractiveNN().to(device)
-relu_model = ReLUDiffractiveNN().to(device)
+relu_model = InverseReLUDiffractiveNN().to(device)
 normal_model.load_state_dict(
     torch.load(
         "saved_models/fully_optical/"
@@ -44,8 +44,7 @@ normal_model.load_state_dict(
 relu_model.load_state_dict(
     torch.load(
         "saved_models/fully_optical/"
-        "fashion_mnist_model_relu_5_layers_"
-        "50_epochs"
+        "fashion_mnist_model_inverse_relu_5_layers_50_epochs"
     )
 )
 
