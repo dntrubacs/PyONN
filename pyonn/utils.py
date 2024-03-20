@@ -380,15 +380,26 @@ def plot_optical_encoder(
     image_title: str = None,
     save_path: str = None,
 ) -> None:
-    """
+    """Plot the images of an optical encoder.
+
+    The images plotted are the original optical image, the detector intensity
+    map and the image after the max pool layer.
 
     Args:
-        model:
-        optical_image:
-        label:
-
-    Returns:
-
+        model: Optical Encoder moder, must be created with OpticalEncoder
+            from pyonn.prebuilts.
+        optical_image: Input image in the model (must be an optical image
+            generated with the pyonn_data.processing.create_optical_images
+            function).
+        label: Label of the input image (must be a scalar label e.g. int from 0
+            9).
+        x_coordinates: Numpy array representing the x coordinates of all
+             pixels. Must be of shape (n_pixels, ).
+        y_coordinates: Numpy array representing the y coordinates of all
+             pixels. Must be of shape (n_pixels, ).
+        image_title: Title of the optical image plot. If none is given the
+            title will simply state the prediction and label
+        save_path: The path where to save the figure.
     """
     output = torch.nn.functional.softmax(model(optical_image))
 
@@ -404,7 +415,7 @@ def plot_optical_encoder(
     # create a meshgrid for plotting
     x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
 
-    # create a meshgrid for plotting the maxpool layer (40x40)
+    # create a meshgrid for plotting the max pool layer (40x40)
     reduced_x_coordinates = np.linspace(
         start=min(x_coordinates), stop=max(x_coordinates), num=40
     )
@@ -461,6 +472,7 @@ def plot_optical_encoder(
     if save_path is not None:
         plt.savefig(save_path)
 
+    # show the figure
     plt.show()
 
 
