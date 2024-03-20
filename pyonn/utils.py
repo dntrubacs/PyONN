@@ -377,6 +377,8 @@ def plot_optical_encoder(
     label: float,
     x_coordinates: np.ndarray,
     y_coordinates: np.ndarray,
+    image_title: str = None,
+    save_path: str = None,
 ) -> None:
     """
 
@@ -398,16 +400,28 @@ def plot_optical_encoder(
     max_pool = model.max_pool
     max_pool_out = max_pool(detector_intensity_map.view(1, 120, 120))
     max_pool_out = max_pool_out.view(40, 40)
-    print(max_pool_out.shape)
 
     # create a meshgrid for plotting
     x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
+
+    # create a meshgrid for plotting the maxpool layer (40x40)
+    reduced_x_coordinates = np.linspace(
+        start=min(x_coordinates), stop=max(x_coordinates), num=40
+    )
+    reduced_y_coordinates = np.linspace(
+        start=min(y_coordinates), stop=max(y_coordinates), num=40
+    )
+    reduced_x_mesh, reduced_y_mesh = np.meshgrid(
+        reduced_x_coordinates, reduced_y_coordinates
+    )
 
     # create the figure
     figure, axis = plt.subplots(1, 3, figsize=(30, 8))
 
     # plot the input image
-    axis[0].set_title(f"Prediction: {predicted_label}. Label: {label}")
+    if image_title is None:
+        image_title = f"Prediction: {predicted_label}. Label: {label}"
+    axis[0].set_title(image_title)
     input_image_map = axis[0].pcolormesh(
         x_mesh, y_mesh, optical_image.detach().cpu().numpy(), cmap="jet"
     )
@@ -430,13 +444,23 @@ def plot_optical_encoder(
 
     # plot the image after max pool
     axis[2].set_title("Max Pooling")
-    predicted_image_map = axis[2].imshow(
-        max_pool_out.detach().cpu().numpy(), cmap="inferno"
-    )
-
     axis[2].set_xlabel("$x$ ")
     axis[2].set_ylabel("$y$ ")
-    figure.colorbar(mappable=predicted_image_map)
+    max_pool_image_map = axis[2].pcolormesh(
+        reduced_x_mesh,
+        reduced_y_mesh,
+        max_pool_out.detach().cpu().numpy(),
+        cmap="inferno",
+    )
+
+    axis[2].set_xlabel("$x$ [m]")
+    axis[2].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=max_pool_image_map)
+
+    # if required, save the figure
+    if save_path is not None:
+        plt.savefig(save_path)
+
     plt.show()
 
 

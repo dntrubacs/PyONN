@@ -9,6 +9,7 @@ from pyonn.prebuilts import OpticalEncoder
 from pyonn_data.datasets import HybridImageDataset
 from pyonn.utils import (
     plot_optical_encoder,
+    test_model_on_hybrid_dataset,
 )
 import torch
 
@@ -54,17 +55,16 @@ test_dataset = HybridImageDataset(
 
 # find the accuracy for the training data
 print("Finding the accuracy on training data")
-# train_accuracy = test_model_on_hybrid_dataset(
-#   model=model, dataset=train_dataset
-# )
+train_accuracy = test_model_on_hybrid_dataset(
+    model=model, dataset=train_dataset
+)
 
 # find the accuracy for the test data
 print("Finding the accuracy on test data")
-# test_accuracy = test_model_on_hybrid_dataset(model=model,
-# dataset=test_dataset)
+test_accuracy = test_model_on_hybrid_dataset(model=model, dataset=test_dataset)
 
-# print(f"Train accuracy: {train_accuracy*100} %")
-# print(f"Test accuracy: {test_accuracy*100} %")
+print(f"Train accuracy: {train_accuracy*100} %")
+print(f"Test accuracy: {test_accuracy*100} %")
 
 
 with torch.no_grad():
@@ -74,6 +74,16 @@ with torch.no_grad():
 
         # get a random image and label
         test_image, test_label = test_dataset[random_index]
+        r_t_label = test_label.detach().cpu().numpy()
+
+        output = torch.nn.functional.softmax(model(test_image))
+
+        # get the predicted label
+        # output = output.detach().cpu().numpy()
+        # predicted_label = np.argmax(output)
+
+        # p_label = convert_fashion_mnist_label(predicted_label)
+        # r_label = convert_fashion_mnist_label(int(r_t_label))
 
         plot_optical_encoder(
             model=model,
@@ -81,6 +91,9 @@ with torch.no_grad():
             label=test_label,
             x_coordinates=model.input_layer.x_coordinates,
             y_coordinates=model.input_layer.y_coordinates,
+            image_title=None,
+            save_path=f"results/model_predictions/optical_encoder/"
+            f"mnist/model_predictions_{j}.png",
         )
 
     #   model.input_layer.plot_output_map()
