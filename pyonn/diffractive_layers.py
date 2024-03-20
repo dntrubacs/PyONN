@@ -26,7 +26,7 @@ from pyonn.angular_spectrum_propagation_method import (
     propagate_complex_amplitude_map,
     plot_real_maps,
 )
-from pyonn.utils import plot_complex_amplitude_map
+from pyonn.testing import plot_complex_amplitude_map
 from typing import Optional
 from matplotlib import pyplot as plt
 

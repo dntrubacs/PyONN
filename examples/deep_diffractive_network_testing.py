@@ -7,7 +7,7 @@ import numpy as np
 import os
 from pyonn.prebuilts import OpticalEncoder
 from pyonn_data.datasets import HybridImageDataset
-from pyonn.utils import (
+from pyonn.testing import (
     plot_optical_encoder,
     test_model_on_hybrid_dataset,
 )

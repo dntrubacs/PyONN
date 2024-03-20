@@ -4,7 +4,7 @@ on the MNIST dataset."""
 
 import numpy as np
 import os
-from pyonn.utils import plot_training_histogram
+from pyonn.testing import plot_training_histogram
 
 from pyonn_data.datasets import HybridImageDataset
 from pyonn.prebuilts import OpticalEncoder

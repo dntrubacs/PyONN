@@ -6,7 +6,7 @@ import os
 from pyonn.prebuilts import FiveLayerDiffractiveNN, InverseReLUDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn.diffractive_layers import DiffractiveInverseReLU
-from pyonn.utils import (
+from pyonn.testing import (
     test_model_on_image,
     plot_model_testing,
 )
