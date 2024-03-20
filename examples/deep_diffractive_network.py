@@ -4,7 +4,7 @@ on the MNIST dataset."""
 
 import numpy as np
 import os
-from pyonn.testing import plot_training_histogram
+from pyonn.testing import plot_training_histogram, test_model_on_hybrid_dataset
 
 from pyonn_data.datasets import HybridImageDataset
 from pyonn.prebuilts import OpticalEncoder
@@ -52,9 +52,13 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 # number of epochs
 n_epochs = 20
 
-# a list of all train and validation losses after an epoch
+# a list of all train and validation losses after each epoch
 train_losses = []
 validation_losses = []
+
+# a list of all train and validation losses after each epoch
+train_accuracies = []
+validation_accuracies = []
 
 for epoch in range(n_epochs):
     # the current train and validation loss
@@ -101,9 +105,25 @@ for epoch in range(n_epochs):
         f"validation loss: {validation_losses[-1]}"
     )
 
+    # get the accuracy on the training and validation dataset
+    train_accuracy = test_model_on_hybrid_dataset(
+        model=model, dataset=train_dataset
+    )
+    validation_accuracy = test_model_on_hybrid_dataset(
+        model=model, dataset=validation_dataset
+    )
+
+    # save the current train and validation accuracy
+    train_accuracies.append(train_accuracy)
+    validation_accuracies.append(validation_accuracy)
+
     # plot a histogram of the loss vs epoch
     plot_training_histogram(
-        training_losses=train_losses, validation_losses=validation_losses
+        training_losses=train_losses,
+        validation_losses=validation_losses,
+        training_accuracies=train_accuracies,
+        validation_accuracies=validation_accuracies,
+        loss_label="Cross Entropy Loss",
     )
 
 """

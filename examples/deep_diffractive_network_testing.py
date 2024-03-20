@@ -8,6 +8,7 @@ import os
 from pyonn.prebuilts import OpticalEncoder
 from pyonn_data.datasets import HybridImageDataset
 from pyonn.testing import (
+    get_optical_encoder_prediction,
     plot_optical_encoder,
     test_model_on_hybrid_dataset,
 )
@@ -74,16 +75,11 @@ with torch.no_grad():
 
         # get a random image and label
         test_image, test_label = test_dataset[random_index]
-        r_t_label = test_label.detach().cpu().numpy()
+        test_label = test_label.detach().cpu().numpy()
 
-        output = torch.nn.functional.softmax(model(test_image))
-
-        # get the predicted label
-        # output = output.detach().cpu().numpy()
-        # predicted_label = np.argmax(output)
-
-        # p_label = convert_fashion_mnist_label(predicted_label)
-        # r_label = convert_fashion_mnist_label(int(r_t_label))
+        predicted_label = get_optical_encoder_prediction(
+            model=model, optical_image=test_image
+        )
 
         plot_optical_encoder(
             model=model,
@@ -95,10 +91,6 @@ with torch.no_grad():
             save_path=f"results/model_predictions/optical_encoder/"
             f"mnist/model_predictions_{j}.png",
         )
-
-    #   model.input_layer.plot_output_map()
-    #   model.diffractive_layer.plot_output_map()
-    #   model.detector_layer.plot_intensity_map()
 
     """
         # test the model on the random data

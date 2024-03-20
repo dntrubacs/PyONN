@@ -145,6 +145,32 @@ def test_model_on_optical_dataset(
     return n_correct / n_samples
 
 
+def get_optical_encoder_prediction(
+    model: torch.nn.Module, optical_image: torch.Tensor
+) -> int:
+    """Gets the predicted label of an optical image.
+
+    Args:
+        model: Optical encoder. Must be made as a torch model.
+            (see the examples module).
+        optical_image: Input image in the model (must be an optical image
+            generated with the pyonn_data.processing.create_optical_images
+            function).
+
+    Returns:
+        The predicted label.
+    """
+    # get the model output
+    output = torch.nn.functional.softmax(model(optical_image))
+
+    # get the predicted label
+    output = output.detach().cpu().numpy()
+    predicted_label = np.argmax(output)
+
+    # return the predicted label
+    return int(predicted_label)
+
+
 def test_model_on_hybrid_dataset(
     model: torch.nn.Module, dataset: HybridImageDataset
 ) -> float:
@@ -154,10 +180,11 @@ def test_model_on_hybrid_dataset(
         model:  Optical encoder. Must be made as a torch model.
             (see the examples module).
         dataset: Hybrid Dataset (must be made with pyonn_data.datasets
-        module).
+            module).
 
     Returns:
-        The accuracy of the model on the given dataset.
+        The accuracy of the model on the given dataset (int between 0 and
+        0.
     """
     # number of samples in the dataset
     n_samples = dataset.__len__()
@@ -168,11 +195,9 @@ def test_model_on_hybrid_dataset(
     # go through each example and find the accuracy
     for n_sample in range(n_samples):
         optical_image, real_label = dataset[n_sample]
-        output = torch.nn.functional.softmax(model(optical_image))
-
-        # get the predicted label
-        output = output.detach().cpu().numpy()
-        predicted_label = np.argmax(output)
+        predicted_label = get_optical_encoder_prediction(
+            model=model, optical_image=optical_image
+        )
 
         if predicted_label == real_label:
             n_correct += 1
@@ -217,37 +242,38 @@ def plot_optical_encoder(
             title will simply state the prediction and label
         save_path: The path where to save the figure.
     """
-    output = torch.nn.functional.softmax(model(optical_image))
 
-    # get the predicted label
-    output = output.detach().cpu().numpy()
-    predicted_label = np.argmax(output)
-
+    # detector intensity map
     detector_intensity_map = model.detector_layer.intensity_map
+
+    # max pool intensity map
     max_pool = model.max_pool
     max_pool_out = max_pool(detector_intensity_map.view(1, 120, 120))
-    max_pool_out = max_pool_out.view(40, 40)
+    max_pool_intensity_map = max_pool_out.view(40, 40).detach().cpu().numpy()
 
     # create a meshgrid for plotting
     x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
 
     # create a meshgrid for plotting the max pool layer (40x40)
-    reduced_x_coordinates = np.linspace(
+    m_x_coordinates = np.linspace(
         start=min(x_coordinates), stop=max(x_coordinates), num=40
     )
-    reduced_y_coordinates = np.linspace(
+    m_y_coordinates = np.linspace(
         start=min(y_coordinates), stop=max(y_coordinates), num=40
     )
-    reduced_x_mesh, reduced_y_mesh = np.meshgrid(
-        reduced_x_coordinates, reduced_y_coordinates
-    )
+    m_x_mesh, m_y_mesh = np.meshgrid(m_x_coordinates, m_y_coordinates)
 
     # create the figure
     figure, axis = plt.subplots(1, 3, figsize=(30, 8))
 
     # plot the input image
     if image_title is None:
+        predicted_label = get_optical_encoder_prediction(
+            model=model, optical_image=optical_image
+        )
         image_title = f"Prediction: {predicted_label}. Label: {label}"
+
+    # plot the optical image
     axis[0].set_title(image_title)
     input_image_map = axis[0].pcolormesh(
         x_mesh, y_mesh, optical_image.detach().cpu().numpy(), cmap="jet"
@@ -273,16 +299,16 @@ def plot_optical_encoder(
     axis[2].set_title("Max Pooling")
     axis[2].set_xlabel("$x$ ")
     axis[2].set_ylabel("$y$ ")
-    max_pool_image_map = axis[2].pcolormesh(
-        reduced_x_mesh,
-        reduced_y_mesh,
-        max_pool_out.detach().cpu().numpy(),
+    max_pool_intensity_map = axis[2].pcolormesh(
+        m_x_mesh,
+        m_y_mesh,
+        max_pool_out,
         cmap="inferno",
     )
 
     axis[2].set_xlabel("$x$ [m]")
     axis[2].set_ylabel("$y$ [m]")
-    figure.colorbar(mappable=max_pool_image_map)
+    figure.colorbar(mappable=max_pool_intensity_map)
 
     # if required, save the figure
     if save_path is not None:
@@ -365,27 +391,48 @@ def plot_model_testing(
 
 
 def plot_training_histogram(
-    training_losses: list, validation_losses: Optional[list] = None
+    training_losses: list,
+    validation_losses: Optional[list] = None,
+    training_accuracies: Optional[list] = None,
+    validation_accuracies: Optional[list] = None,
+    loss_label: Optional[str] = "Loss",
 ) -> None:
     """Plots the training histogram.
 
     Args:
         training_losses: Losses of the model during each epoch.
         validation_losses: Validations losses of the model during each epoch.
+        training_accuracies: Accuracies of the model during each epoch.
+        validation accuracies: Validation accuracies of the model during each
+            epoch.
+        loss_label: The loss used during training.
     """
     # the number of all epochs numbers
     epochs = np.arange(1, len(training_losses) + 1, step=1)
 
     # plot the histogram
     plt.figure(figsize=(12, 8))
-    plt.title("Loss vs Epochs")
-    plt.ylabel("Mean squared Error")
+    plt.title("Loss and accuracy vs epochs")
+    plt.ylabel(loss_label)
     plt.xlabel("Epochs")
-    # plot all the epochs number only if the number is smaller than 10
-    if len(epochs) < 10:
+    # plot all the epochs number only if the number is smaller than 20
+    if len(epochs) < 20:
         plt.xticks(epochs)
-    plt.plot(epochs, training_losses, color="green", label="training")
+    plt.plot(epochs, training_losses, color="green", label="training loss")
     if validation_losses is not None:
-        plt.plot(epochs, validation_losses, color="blue", label="validation")
+        plt.plot(
+            epochs, validation_losses, color="blue", label="validation loss"
+        )
+    if training_accuracies is not None:
+        plt.plot(
+            epochs, training_accuracies, color="red", label="training accuracy"
+        )
+    if validation_accuracies is not None:
+        plt.plot(
+            epochs,
+            validation_accuracies,
+            color="orange",
+            label="validation accuracy",
+        )
     plt.legend()
     plt.show()
