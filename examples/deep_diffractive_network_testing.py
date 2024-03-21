@@ -22,27 +22,34 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 
 train_images = np.load(
-    file="data/mnist_processed_data/train_images", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_raw_data/train_labels", allow_pickle=True
+    file="data/fashion_mnist_raw_data/train_labels", allow_pickle=True
 )
 
 test_images = np.load(
-    file="data/mnist_processed_data/test_images", allow_pickle=True
+    file="data/fashion_mnist_processed_data/test_images", allow_pickle=True
 )
 test_labels = np.load(
-    file="data/mnist_raw_data/test_labels", allow_pickle=True
+    file="data/fashion_mnist_raw_data/test_labels", allow_pickle=True
 )
 
 # load the trained weights
 model = OpticalEncoder().to(device)
 model.load_state_dict(
     torch.load(
-        "saved_models/optical_encoders/"
-        "mnist_model_optical_encoder_100_epochs"
+        "saved_models/optical_encoder/"
+        "fashion_mnist_model_optical_encoder_100_epochs"
     )
 )
+
+model.diffractive_layer_0.plot_weights_map()
+model.diffractive_layer_1.plot_weights_map()
+model.diffractive_layer_2.plot_weights_map()
+model.diffractive_layer_3.plot_weights_map()
+model.diffractive_layer_4.plot_weights_map()
+
 
 # create an optical image dataset
 train_dataset = HybridImageDataset(
@@ -88,8 +95,8 @@ with torch.no_grad():
             x_coordinates=model.input_layer.x_coordinates,
             y_coordinates=model.input_layer.y_coordinates,
             image_title=None,
-            save_path=f"results/model_predictions/optical_encoder/"
-            f"mnist/model_predictions_{j}.png",
+            # save_path=f"results/model_predictions/optical_encoder/"
+            # f"mnist/model_predictions_{j}.png",
         )
 
     """

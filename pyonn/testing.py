@@ -172,7 +172,7 @@ def get_optical_encoder_prediction(
 
 
 def test_model_on_hybrid_dataset(
-    model: torch.nn.Module, dataset: HybridImageDataset
+    model: torch.nn.Module, dataset: HybridImageDataset, verbose: bool = True
 ) -> float:
     """tests the model on a given dataset.
 
@@ -181,6 +181,7 @@ def test_model_on_hybrid_dataset(
             (see the examples module).
         dataset: Hybrid Dataset (must be made with pyonn_data.datasets
             module).
+        verbose: Whether to print feedback during testing.
 
     Returns:
         The accuracy of the model on the given dataset (int between 0 and
@@ -202,11 +203,12 @@ def test_model_on_hybrid_dataset(
         if predicted_label == real_label:
             n_correct += 1
         if n_sample % 1000 == 0 and n_sample > 1:
-            print(
-                f"Sample number: {n_sample}. "
-                f"Correct predictions until now: {n_correct}. "
-                f"Accuracy until now: {n_correct / n_sample * 100} %"
-            )
+            if verbose:
+                print(
+                    f"Sample number: {n_sample}. "
+                    f"Correct predictions until now: {n_correct}. "
+                    f"Accuracy until now: {n_correct / n_sample * 100} %"
+                )
 
     # return the accuracy
     return n_correct / n_samples
@@ -302,7 +304,7 @@ def plot_optical_encoder(
     max_pool_intensity_map = axis[2].pcolormesh(
         m_x_mesh,
         m_y_mesh,
-        max_pool_out,
+        max_pool_intensity_map,
         cmap="inferno",
     )
 

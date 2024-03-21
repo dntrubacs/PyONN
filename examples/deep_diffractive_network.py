@@ -17,10 +17,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
+    file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/fashion_mnist_raw_data/train_labels", allow_pickle=True
+    file="data/mnist_raw_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset f
@@ -50,7 +50,7 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 20
+n_epochs = 100
 
 # a list of all train and validation losses after each epoch
 train_losses = []
@@ -107,10 +107,10 @@ for epoch in range(n_epochs):
 
     # get the accuracy on the training and validation dataset
     train_accuracy = test_model_on_hybrid_dataset(
-        model=model, dataset=train_dataset
+        model=model, dataset=train_dataset, verbose=False
     )
     validation_accuracy = test_model_on_hybrid_dataset(
-        model=model, dataset=validation_dataset
+        model=model, dataset=validation_dataset, verbose=False
     )
 
     # save the current train and validation accuracy
@@ -123,7 +123,7 @@ for epoch in range(n_epochs):
         validation_losses=validation_losses,
         training_accuracies=train_accuracies,
         validation_accuracies=validation_accuracies,
-        loss_label="Cross Entropy Loss",
+        loss_label="Cross entropy loss and accuracy",
     )
 
 """
@@ -158,5 +158,5 @@ with torch.no_grad():
 torch.save(
     model.state_dict(),
     f="saved_models/optical_encoders/"
-    "fashion_mnist_model_optical_encoder_20_epochs",
+    "fashion_mnist_model_optical_encoder_100_epochs",
 )
