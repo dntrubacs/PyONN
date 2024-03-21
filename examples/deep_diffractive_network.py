@@ -4,10 +4,14 @@ on the MNIST dataset."""
 
 import numpy as np
 import os
-from pyonn.testing import plot_training_histogram, test_model_on_hybrid_dataset
+from pyonn.testing import (
+    plot_training_histogram,
+    plot_model_testing,
+    test_model_on_image,
+)
 
-from pyonn_data.datasets import HybridImageDataset
-from pyonn.prebuilts import OpticalEncoder
+from pyonn_data.datasets import OpticalImageDataset
+from pyonn.prebuilts import FiveLayerPhaseModulatedDiffractiveNN
 import torch
 from torch.utils.data import DataLoader, random_split
 
@@ -20,12 +24,12 @@ train_images = np.load(
     file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_raw_data/train_labels", allow_pickle=True
+    file="data/mnist_processed_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset f
-dataset = HybridImageDataset(
-    optical_images=train_images, scalar_labels=train_labels
+dataset = OpticalImageDataset(
+    optical_images=train_images, optical_labels=train_labels
 )
 
 # in this case the size of the data is 60000 images, so the dataset will
@@ -43,14 +47,14 @@ validation_loader = DataLoader(
 )
 
 # build the model and move to cuda if available
-model = OpticalEncoder().to(device)
+model = FiveLayerPhaseModulatedDiffractiveNN().to(device)
 
 # loss and optimizer
-criterion = torch.nn.CrossEntropyLoss()
+criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 100
+n_epochs = 50
 
 # a list of all train and validation losses after each epoch
 train_losses = []
@@ -106,27 +110,27 @@ for epoch in range(n_epochs):
     )
 
     # get the accuracy on the training and validation dataset
-    train_accuracy = test_model_on_hybrid_dataset(
-        model=model, dataset=train_dataset, verbose=False
-    )
-    validation_accuracy = test_model_on_hybrid_dataset(
-        model=model, dataset=validation_dataset, verbose=False
-    )
+    # train_accuracy = test_model_on_hybrid_dataset(
+    #   model=model, dataset=train_dataset, verbose=False
+    # )
+    # validation_accuracy = test_model_on_hybrid_dataset(
+    #   model=model, dataset=validation_dataset, verbose=False
+    # )
 
     # save the current train and validation accuracy
-    train_accuracies.append(train_accuracy)
-    validation_accuracies.append(validation_accuracy)
+    # train_accuracies.append(train_accuracy)
+    # validation_accuracies.append(validation_accuracy)
 
     # plot a histogram of the loss vs epoch
     plot_training_histogram(
         training_losses=train_losses,
         validation_losses=validation_losses,
-        training_accuracies=train_accuracies,
-        validation_accuracies=validation_accuracies,
-        loss_label="Cross entropy loss and accuracy",
+        training_accuracies=None,
+        validation_accuracies=None,
+        loss_label="Mean squared error",
     )
 
-"""
+
 # show 10 random predictions
 with torch.no_grad():
     for j in range(10):
@@ -150,13 +154,13 @@ with torch.no_grad():
             y_coordinates=model.input_layer.y_coordinates,
             input_image_title=f"Input Image: {output_test[4]}",
             predicted_image_title=f"Prediction: {output_test[3]}",
-            label_image_title=f"Label: {output_test[3]}",
+            label_image_title=f"Label: {output_test[4]}",
         )
-"""
+
 
 # save the trained model
 torch.save(
     model.state_dict(),
-    f="saved_models/optical_encoders/"
-    "fashion_mnist_model_optical_encoder_100_epochs",
+    f="saved_models/fully_optical/phase_modulated_only"
+    "mnist_model_5_layers_50_epochs",
 )
