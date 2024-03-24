@@ -578,6 +578,114 @@ class PhaseDiffractiveLayer(DiffractiveLayerCommon):
         self._plot_output_map(output_map=self.output_map)
 
 
+class BinaryAmplitudeDiffractiveLayer(DiffractiveLayerCommon):
+    """Binary Ampltiude Diffractive Layer used for training models.
+
+    Simillar to the generic Diffractive Layer class but the amplitude of
+    the neurons can be only 0 or 1.
+    """
+
+    def __init__(
+        self,
+        n_size: int,
+        x_coordinates: np.ndarray,
+        y_coordinates: np.ndarray,
+        z_coordinate: float,
+        z_next: float,
+        wavelength: float,
+    ) -> None:
+        # the parameters characterizing the architecture of the layer.
+        super().__init__(
+            n_size,
+            x_coordinates,
+            y_coordinates,
+            z_coordinate,
+            z_next,
+            wavelength,
+        )
+        self.n_size = n_size
+        self.x_coordinates = x_coordinates
+        self.y_coordinates = y_coordinates
+        self.z_coordinate = z_coordinate
+        self.z_next = z_next
+
+        # the wavelength of light
+        self.wavelength = wavelength
+
+        # output map (output of the forward pass). Stored for visual feedback
+        # of the output of the layer
+        self.output_map = None
+
+    def _clip_weights(self) -> torch.Tensor:
+        # always clip the weights to have an absolute of 1 or 0.
+        # create a binary weights map where all the weight with amplitude > 0.5
+        # go to 1 and everything else goes to 1
+        binary_weights_map = (
+            torch.clamp(torch.abs(self.weights), min=0.2) - 0.2
+        )
+        binary_weights_map = torch.abs(
+            torch.div(binary_weights_map, torch.abs(self.weights) - 0.2)
+        )
+
+        # make the new amplitude weights
+        new_amplitude_weights = torch.divide(
+            self.weights, torch.abs(self.weights)
+        )
+        new_amplitude_weights = torch.mul(
+            new_amplitude_weights, binary_weights_map
+        )
+
+        # return the new amplitude weights
+        return new_amplitude_weights
+
+    def plot_weights_map(self) -> None:
+        """Plots the intensity and phase map of the weights."""
+        # always clip the weights
+        clipped_weights = self._clip_weights()
+
+        # plot the map
+        self._plot_complex_map(weights_map=clipped_weights)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward model based on the angular spectrum propagation method.
+
+        Args:
+            x: Tensor representing the values of the output of the layer before
+                at the given points where the weights are (has to be the same
+                size as the weights). All values must represent a complex
+                amplitude.
+
+        Returns:
+            Tensor representing the output of this layer at the given points
+            of the next layer. The output is simply the complex map measured at
+            the next layer.
+        """
+        # the transmission matrix containing the weights
+        transmission_matrix = self._clip_weights()
+
+        # multiply each complex amplitude by the value of a neuron
+        complex_amplitude_map = torch.mul(transmission_matrix, x)
+
+        # find the propagated complex amplitude map at z
+        propagated_complex_amplitude_map = propagate_complex_amplitude_map(
+            complex_amplitude_map=complex_amplitude_map,
+            x_coordinates=self.x_coordinates,
+            wavelength=self.wavelength,
+            distance=self.z_next - self.z_coordinate,
+        )
+
+        # store the output map
+        self.output_map = propagated_complex_amplitude_map
+
+        # return the propagated complex amplitude map
+        return propagated_complex_amplitude_map
+
+    def plot_output_map(self) -> None:
+        """Plots the output of the forward pass as intensity and phase
+        maps."""
+        self._plot_output_map(output_map=self.output_map)
+
+
 class DiffractiveReLU(torch.nn.Module):
     """ReLU activation function for diffractive layers.
 

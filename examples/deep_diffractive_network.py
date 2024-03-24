@@ -9,9 +9,8 @@ from pyonn.testing import (
     plot_model_testing,
     test_model_on_image,
 )
-
 from pyonn_data.datasets import OpticalImageDataset
-from pyonn.prebuilts import FiveLayerPhaseModulatedDiffractiveNN
+from pyonn.prebuilts import FiveLayerBinaryAmplitudeDiffractiveNN
 import torch
 from torch.utils.data import DataLoader, random_split
 
@@ -47,14 +46,14 @@ validation_loader = DataLoader(
 )
 
 # build the model and move to cuda if available
-model = FiveLayerPhaseModulatedDiffractiveNN().to(device)
+model = FiveLayerBinaryAmplitudeDiffractiveNN().to(device)
 
 # loss and optimizer
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs
-n_epochs = 50
+n_epochs = 5
 
 # a list of all train and validation losses after each epoch
 train_losses = []
@@ -99,6 +98,10 @@ for epoch in range(n_epochs):
             # add the validation loss
             validation_loss += loss.item()
 
+    print(model.ba_diffractive_layer_0.weights)
+    print(model.ba_diffractive_layer_1.weights)
+    print(model.ba_diffractive_layer_2.weights)
+
     # save the current train and validation loss
     train_losses.append(train_loss / len(train_loader))
     validation_losses.append(validation_loss / len(validation_loader))
@@ -110,16 +113,16 @@ for epoch in range(n_epochs):
     )
 
     # get the accuracy on the training and validation dataset
-    # train_accuracy = test_model_on_hybrid_dataset(
-    #   model=model, dataset=train_dataset, verbose=False
+    # train_accuracy = test_model_on_optical_dataset(
+    #  model=model, dataset=train_dataset
     # )
-    # validation_accuracy = test_model_on_hybrid_dataset(
-    #   model=model, dataset=validation_dataset, verbose=False
+    # validation_accuracy = test_model_on_optical_dataset(
+    #  model=model, dataset=validation_dataset
     # )
 
     # save the current train and validation accuracy
-    # train_accuracies.append(train_accuracy)
-    # validation_accuracies.append(validation_accuracy)
+    #  train_accuracies.append(train_accuracy)
+    #  validation_accuracies.append(validation_accuracy)
 
     # plot a histogram of the loss vs epoch
     plot_training_histogram(
@@ -127,7 +130,7 @@ for epoch in range(n_epochs):
         validation_losses=validation_losses,
         training_accuracies=None,
         validation_accuracies=None,
-        loss_label="Mean squared error",
+        loss_label="Mean squared error and Accuracy",
     )
 
 
@@ -157,10 +160,24 @@ with torch.no_grad():
             label_image_title=f"Label: {output_test[4]}",
         )
 
+# save the model inside a folder of the same name
+# also save the training and validation accuracies and losses (necessary
+# for later plotting)
+os.chdir(
+    "C:/Users/dit1u20/PycharmProjects/PyONN/"
+    "saved_models/fully_optical/binary_amplitude"
+)
+
+# save_model_metric(
+#   train_accuracies=np.array(train_accuracies),
+#  validation_accuracies=np.array(validation_accuracies),
+# train_losses=np.array(train_losses),
+# validation_losses=np.array(validation_losses),
+# save_folder='fashion_mnist_model_5_layers_50_epochs'
+# )
 
 # save the trained model
 torch.save(
     model.state_dict(),
-    f="saved_models/fully_optical/phase_modulated_only"
-    "mnist_model_5_layers_50_epochs",
+    f="mnist_model_5_layers_50_epochs/model",
 )

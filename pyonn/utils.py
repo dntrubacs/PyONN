@@ -1,5 +1,45 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle
+import os
+
+
+def save_model_metric(
+    train_accuracies: np.ndarray,
+    validation_accuracies: np.ndarray,
+    train_losses: np.ndarray,
+    validation_losses: np.ndarray,
+    save_folder: str,
+) -> None:
+    """
+
+    Args:
+        train_accuracies:
+        validation_accuracies:
+        train_losses:
+        validation_losses:
+        save_folder:
+
+    Returns:
+
+    """
+    # save the training accuracies
+    with open(os.path.join(save_folder, "train_accuracies"), "wb") as handle:
+        pickle.dump(train_accuracies, handle)
+
+    # save the validation accuracies
+    with open(
+        os.path.join(save_folder, "validation_accuracies"), "wb"
+    ) as handle:  # noqa
+        pickle.dump(validation_accuracies, handle)
+
+    # save the training losses
+    with open(os.path.join(save_folder, "train_losses"), "wb") as handle:
+        pickle.dump(train_losses, handle)
+
+    # save the validation losses
+    with open(os.path.join(save_folder, "validation_losses"), "wb") as handle:
+        pickle.dump(validation_losses, handle)
 
 
 def find_coordinate_matrix(
