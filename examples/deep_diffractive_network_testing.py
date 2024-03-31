@@ -5,7 +5,7 @@ module is to test already trained models.
 
 import numpy as np
 import os
-from pyonn.prebuilts import FiveLayerBinaryAmplitudeDiffractiveNN
+from pyonn.prebuilts import FiveLayerDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn.testing import (
     test_model_on_image,
@@ -37,20 +37,20 @@ test_labels = np.load(
 )
 
 # load the trained weights
-model = FiveLayerBinaryAmplitudeDiffractiveNN().to(device)
+model = FiveLayerDiffractiveNN().to(device)
 model.load_state_dict(
     torch.load(
-        "saved_models/fully_optical/binary_amplitude/"
+        "saved_models/fully_optical/normal_diffractive/"
         "mnist_model_5_layers_50_epochs/model"
     )
 )
 
 
-model.ba_diffractive_layer_0.plot_weights_map()
-model.ba_diffractive_layer_1.plot_weights_map()
-model.ba_diffractive_layer_2.plot_weights_map()
-model.ba_diffractive_layer_3.plot_weights_map()
-model.ba_diffractive_layer_4.plot_weights_map()
+model.diffractive_layer_0.plot_weights_map()
+model.diffractive_layer_1.plot_weights_map()
+model.diffractive_layer_2.plot_weights_map()
+model.diffractive_layer_3.plot_weights_map()
+model.diffractive_layer_4.plot_weights_map()
 
 
 # create an optical image dataset

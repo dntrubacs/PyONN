@@ -414,7 +414,7 @@ def plot_training_histogram(
 
     # plot the histogram
     plt.figure(figsize=(12, 8))
-    plt.title("Loss and accuracy vs epochs")
+    plt.title("Loss vs epochs")
     plt.ylabel(loss_label)
     plt.xlabel("Epochs")
     # plot all the epochs number only if the number is smaller than 20

@@ -579,7 +579,7 @@ class PhaseDiffractiveLayer(DiffractiveLayerCommon):
 
 
 class BinaryAmplitudeDiffractiveLayer(DiffractiveLayerCommon):
-    """Binary Ampltiude Diffractive Layer used for training models.
+    """Binary Amplitude Diffractive Layer used for training models.
 
     Simillar to the generic Diffractive Layer class but the amplitude of
     the neurons can be only 0 or 1.
@@ -621,10 +621,10 @@ class BinaryAmplitudeDiffractiveLayer(DiffractiveLayerCommon):
         # create a binary weights map where all the weight with amplitude > 0.5
         # go to 1 and everything else goes to 1
         binary_weights_map = (
-            torch.clamp(torch.abs(self.weights), min=0.2) - 0.2
+            torch.clamp(torch.abs(self.weights), min=0.01) - 0.01
         )
         binary_weights_map = torch.abs(
-            torch.div(binary_weights_map, torch.abs(self.weights) - 0.2)
+            torch.div(binary_weights_map, torch.abs(self.weights) - 0.01)
         )
 
         # make the new amplitude weights
@@ -662,6 +662,7 @@ class BinaryAmplitudeDiffractiveLayer(DiffractiveLayerCommon):
         """
         # the transmission matrix containing the weights
         transmission_matrix = self._clip_weights()
+        # print(torch.abs(transmission_matrix))
 
         # multiply each complex amplitude by the value of a neuron
         complex_amplitude_map = torch.mul(transmission_matrix, x)

@@ -8,9 +8,11 @@ from pyonn.testing import (
     plot_training_histogram,
     plot_model_testing,
     test_model_on_image,
+    test_model_on_optical_dataset,
 )
+from pyonn.utils import save_model_metric
 from pyonn_data.datasets import OpticalImageDataset
-from pyonn.prebuilts import FiveLayerBinaryAmplitudeDiffractiveNN
+from pyonn.prebuilts import FiveLayerDiffractiveNN
 import torch
 from torch.utils.data import DataLoader, random_split
 
@@ -20,10 +22,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/mnist_processed_data/train_images", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/mnist_processed_data/train_labels", allow_pickle=True
+    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset f
@@ -46,14 +48,14 @@ validation_loader = DataLoader(
 )
 
 # build the model and move to cuda if available
-model = FiveLayerBinaryAmplitudeDiffractiveNN().to(device)
+model = FiveLayerDiffractiveNN().to(device)
 
 # loss and optimizer
 criterion = torch.nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
 # number of epochs
-n_epochs = 5
+n_epochs = 50
 
 # a list of all train and validation losses after each epoch
 train_losses = []
@@ -98,10 +100,6 @@ for epoch in range(n_epochs):
             # add the validation loss
             validation_loss += loss.item()
 
-    print(model.ba_diffractive_layer_0.weights)
-    print(model.ba_diffractive_layer_1.weights)
-    print(model.ba_diffractive_layer_2.weights)
-
     # save the current train and validation loss
     train_losses.append(train_loss / len(train_loader))
     validation_losses.append(validation_loss / len(validation_loader))
@@ -113,23 +111,23 @@ for epoch in range(n_epochs):
     )
 
     # get the accuracy on the training and validation dataset
-    # train_accuracy = test_model_on_optical_dataset(
-    #  model=model, dataset=train_dataset
-    # )
-    # validation_accuracy = test_model_on_optical_dataset(
-    #  model=model, dataset=validation_dataset
-    # )
+    train_accuracy = test_model_on_optical_dataset(
+        model=model, dataset=train_dataset
+    )
+    validation_accuracy = test_model_on_optical_dataset(
+        model=model, dataset=validation_dataset
+    )
 
     # save the current train and validation accuracy
-    #  train_accuracies.append(train_accuracy)
-    #  validation_accuracies.append(validation_accuracy)
+    train_accuracies.append(train_accuracy)
+    validation_accuracies.append(validation_accuracy)
 
     # plot a histogram of the loss vs epoch
     plot_training_histogram(
         training_losses=train_losses,
         validation_losses=validation_losses,
-        training_accuracies=None,
-        validation_accuracies=None,
+        training_accuracies=train_accuracies,
+        validation_accuracies=validation_accuracies,
         loss_label="Mean squared error and Accuracy",
     )
 
@@ -165,19 +163,19 @@ with torch.no_grad():
 # for later plotting)
 os.chdir(
     "C:/Users/dit1u20/PycharmProjects/PyONN/"
-    "saved_models/fully_optical/binary_amplitude"
+    "saved_models/fully_optical/normal_diffractive"
 )
 
-# save_model_metric(
-#   train_accuracies=np.array(train_accuracies),
-#  validation_accuracies=np.array(validation_accuracies),
-# train_losses=np.array(train_losses),
-# validation_losses=np.array(validation_losses),
-# save_folder='fashion_mnist_model_5_layers_50_epochs'
-# )
+save_model_metric(
+    train_accuracies=np.array(train_accuracies),
+    validation_accuracies=np.array(validation_accuracies),
+    train_losses=np.array(train_losses),
+    validation_losses=np.array(validation_losses),
+    save_folder="fashion_mnist_model_5_layers_50_epochs",
+)
 
 # save the trained model
 torch.save(
     model.state_dict(),
-    f="mnist_model_5_layers_50_epochs/model",
+    f="fashion_mnist_model_5_layers_50_epochs/model",
 )
