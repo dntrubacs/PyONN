@@ -229,3 +229,72 @@ def circ_function(x: np.ndarray) -> np.ndarray:
 
     # return the result
     return circ_result
+
+
+def optical_relu_plotting(x, alpha):
+    if x < alpha:
+        return 0
+    else:
+        return x
+
+
+def optical_inverse_relu_plotting(x, beta):
+    if x > beta:
+        return beta
+    else:
+        return x
+
+
+def plot_optical_activation_function(
+    mode: str, alpha: float = None, beta: float = None
+) -> None:
+    """Plots optical activation functions such as ReLU or Inverse Relu.
+
+    Args:
+        mode:
+        alpha:
+    """
+    # neuron amplitude range
+    amplitude_range = np.arange(start=0, stop=1, step=0.0001)
+    output = None
+
+    # apply the optical activation function
+    if mode == "relu":
+        output = [
+            optical_relu_plotting(x=x, alpha=alpha) for x in amplitude_range
+        ]
+
+    if mode == "inverse_relu":
+        output = [
+            optical_inverse_relu_plotting(x=x, beta=beta)
+            for x in amplitude_range
+        ]
+
+    # plot the output map
+    plt.figure(figsize=(12, 8))
+    if mode == "relu":
+        plt.title(f"Optical ReLU for $alpha$={alpha}")
+        plt.plot(
+            amplitude_range,
+            output,
+            label="Equivalent Neuron Amplitude",
+            color="blue",
+        )
+    if mode == "inverse_relu":
+        plt.title(f"Optical Inverse ReLU for $beta$={beta}")
+        plt.plot(
+            amplitude_range,
+            output,
+            label="Equivalent Neuron Amplitude",
+            color="red",
+        )
+    plt.xlabel("Amplitude")
+    plt.ylabel("Transmitted Amplitude")
+    plt.xlim([0, 1])
+    plt.ylim([0, 1])
+    plt.legend(loc="upper left")
+    plt.show()
+
+
+if __name__ == "__main__":
+    plot_optical_activation_function(mode="inverse_relu", beta=0.8)
