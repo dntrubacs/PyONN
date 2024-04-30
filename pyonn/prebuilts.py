@@ -188,7 +188,7 @@ class ReLUDiffractiveNN(torch.nn.Module):
             y_coordinates=self.x_coordinates,
             z_coordinate=60e-6,
         )
-        self.relu = DiffractiveReLU(alpha=0.01)
+        self.relu = DiffractiveReLU(alpha=0.001)
 
     # the forward pass
     def forward(self, x) -> torch.Tensor:

@@ -5,7 +5,7 @@ module is to test already trained models.
 
 import numpy as np
 import os
-from pyonn.prebuilts import FiveLayerDiffractiveNN
+from pyonn.prebuilts import ReLUDiffractiveNN
 from pyonn_data.datasets import OpticalImageDataset
 from pyonn.testing import (
     test_model_on_image,
@@ -20,7 +20,8 @@ import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # load the data (must be optical images and labels)
-os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
+os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN/")
+
 
 train_images = np.load(
     file="data/mnist_processed_data/train_images", allow_pickle=True
@@ -37,10 +38,10 @@ test_labels = np.load(
 )
 
 # load the trained weights
-model = FiveLayerDiffractiveNN().to(device)
+model = ReLUDiffractiveNN().to(device)
 model.load_state_dict(
     torch.load(
-        "saved_models/fully_optical/normal_diffractive/"
+        "saved_models/fully_optical/optical_relu/"
         "mnist_model_5_layers_50_epochs/model"
     )
 )

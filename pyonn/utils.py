@@ -5,11 +5,11 @@ import os
 
 
 def save_model_metric(
-    train_accuracies: np.ndarray,
-    validation_accuracies: np.ndarray,
     train_losses: np.ndarray,
     validation_losses: np.ndarray,
     save_folder: str,
+    train_accuracies: np.ndarray = None,
+    validation_accuracies: np.ndarray = None,
 ) -> None:
     """
 
@@ -24,14 +24,18 @@ def save_model_metric(
 
     """
     # save the training accuracies
-    with open(os.path.join(save_folder, "train_accuracies"), "wb") as handle:
-        pickle.dump(train_accuracies, handle)
+    if train_accuracies is not None:
+        with open(
+            os.path.join(save_folder, "train_accuracies"), "wb"
+        ) as handle:
+            pickle.dump(train_accuracies, handle)
 
     # save the validation accuracies
-    with open(
-        os.path.join(save_folder, "validation_accuracies"), "wb"
-    ) as handle:  # noqa
-        pickle.dump(validation_accuracies, handle)
+    if validation_accuracies is not None:
+        with open(
+            os.path.join(save_folder, "validation_accuracies"), "wb"
+        ) as handle:  # noqa
+            pickle.dump(validation_accuracies, handle)
 
     # save the training losses
     with open(os.path.join(save_folder, "train_losses"), "wb") as handle:
