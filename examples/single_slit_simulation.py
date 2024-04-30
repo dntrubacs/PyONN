@@ -46,6 +46,8 @@ crystalline_phase_change = find_phase_change(
     n_1=4.04933, thickness=1e-6, wavelength=1.55e-6, n_2=1.0
 )
 
+print(crystalline_phase_change, amorphous_phase_change)
+
 # generate a phase map that represents a single silt
 # all pixels have amplitude 1 but different phase
 phase_map = np.zeros(shape=(120, 120), dtype=np.float64) + 1.0

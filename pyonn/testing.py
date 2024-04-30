@@ -392,6 +392,88 @@ def plot_model_testing(
     plt.show()
 
 
+def plot_model_all_labels(
+    input_image: np.ndarray,
+    predicted_image: np.ndarray,
+    label_image: np.ndarray,
+    all_labels: np.ndarray,
+    x_coordinates: np.ndarray,
+    y_coordinates: np.ndarray,
+    input_image_title: str = "Input image",
+    predicted_image_title: str = "Predicted",
+    label_image_title: str = "Label",
+    save_path: Optional[str] = None,
+) -> None:
+    """Plot the input image, prediction and label.
+
+    Args:
+        input_image: Input image in the model (must be an optical image
+            generated with the pyonn_data.processing.create_optical_images
+            function).
+        predicted_image: Predicted image of the model.
+        label_image: Label of the input image (must be an optical label
+            generated with the pyonn_data.processing.create_optical_labels
+            function).
+        x_coordinates: Numpy array representing the x coordinates of all
+             pixels. Must be of shape (n_pixels, ).
+        y_coordinates: Numpy array representing the x coordinates of all
+             pixels. Must be of shape (n_pixels, ).
+        input_image_title: Title for the figure containing the input image.
+        predicted_image_title: Title for the figure containing the predicted
+            image.
+        label_image_title: Title for the figure containing the label.
+        save_path: The path where to save the figure.
+    """
+    # create a meshgrid for plotting
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, y_coordinates)
+
+    # create the figure
+    figure, axis = plt.subplots(2, 2, figsize=(20, 20))
+
+    # plot the input image
+    axis[0][0].set_title(input_image_title)
+    input_image_map = axis[0][0].pcolormesh(
+        x_mesh, y_mesh, input_image, cmap="jet"
+    )
+    axis[0][0].set_xlabel("$x$ [m]")
+    axis[0][0].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=input_image_map)
+
+    # plot all the labels
+    axis[0][1].set_title("Detector")
+    detector_map = axis[0][1].pcolormesh(
+        x_mesh, y_mesh, all_labels, cmap="inferno"
+    )
+    axis[0][1].set_xlabel("$x$ [m]")
+    axis[0][1].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=detector_map)
+
+    # plot the predicted image
+    axis[1][0].set_title(predicted_image_title)
+    predicted_image_map = axis[1][0].pcolormesh(
+        x_mesh, y_mesh, predicted_image, cmap="inferno"
+    )
+    axis[1][0].set_xlabel("$x$ [m]")
+    axis[1][0].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=predicted_image_map)
+
+    # plot the label
+    axis[1][1].set_title(label_image_title)
+    label_image_map = axis[1][1].pcolormesh(
+        x_mesh, y_mesh, label_image, cmap="inferno"
+    )
+    axis[1][1].set_xlabel("$x$ [m]")
+    axis[1][1].set_ylabel("$y$ [m]")
+    figure.colorbar(mappable=label_image_map)
+
+    # if required, save the figure
+    if save_path is not None:
+        plt.savefig(save_path)
+
+    # show the figure
+    plt.show()
+
+
 def plot_training_histogram(
     training_losses: list,
     validation_losses: Optional[list] = None,

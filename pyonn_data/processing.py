@@ -101,6 +101,50 @@ def generate_optical_label(label: int) -> np.ndarray:
     return np.flipud(processed_label)
 
 
+def generate_plot_label(label: int) -> np.ndarray:
+    """Generates optical label from a g iven value
+
+    Args:
+        label: Integer between 0 and 9.
+
+    Returns:
+        NUmpy array representing the optical label. The label represent
+        a detector of size (120, 120) where only a region is 'lit up'
+        (1 values).
+    """
+    # processed label
+    processed_label = np.zeros(shape=(120, 120))
+
+    # generate the label for 0
+
+    processed_label[10:30, 10:30] = 1
+
+    processed_label[10:30, 50:70] = 1
+    # generate the label for 2
+
+    processed_label[10:30, 90:110] = 1
+    # generate the label for 3
+
+    processed_label[50:70, 5:25] = 1
+    # generate the label for 4
+
+    processed_label[50:70, 35:55] = 1
+
+    processed_label[50:70, 65:85] = 1
+    # generate the label for 6
+
+    processed_label[50:70, 95:115] = 1
+
+    processed_label[90:110, 10:30] = 1
+    # generate the label for 8
+    processed_label[90:110, 50:70] = 1
+
+    processed_label[90:110, 90:110] = 1
+
+    # flip the image upside down return the processed label
+    return np.flipud(processed_label)
+
+
 def convert_optical_label(optical_label: np.ndarray) -> tuple:
     """Converts an optical label into a normal label.
 
@@ -213,3 +257,31 @@ def convert_fashion_mnist_label(label: int) -> str:
 
     # return the clothing type
     return clothing_dict[label]
+
+
+if __name__ == "__main__":
+    from matplotlib import pyplot as plt
+    from pyonn.utils import create_square_grid_pattern
+
+    label = generate_plot_label(label=8)
+
+    square_grid_pattern = create_square_grid_pattern(
+        center_coordinates=np.array([0, 0]),
+        pixel_length=0.8e-6,
+        pixel_number=120,
+        pixel_separation=0.0,
+        grid_z_coordinate=0,
+    )
+
+    # get the x coordinate. this coordinates will be used in all DNNs
+    x_coordinates = square_grid_pattern[1]
+
+    x_mesh, y_mesh = np.meshgrid(x_coordinates, x_coordinates)
+    plt.figure(figsize=(10, 10))
+    plt.title("Label")
+
+    plt.pcolormesh(x_mesh, y_mesh, label, cmap="inferno")
+    plt.ylabel("$y$ [m]")
+    plt.xlabel("$x$ [m]")
+    # plt.colorbar(mappable=a)
+    plt.show()

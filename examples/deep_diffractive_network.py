@@ -21,10 +21,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load the data (must be optical images and labels)
 os.chdir("C:/Users/dit1u20/PycharmProjects/PyONN")
 train_images = np.load(
-    file="data/fashion_mnist_processed_data/train_images", allow_pickle=True
+    file="data/mnist_processed_data/train_images", allow_pickle=True
 )
 train_labels = np.load(
-    file="data/fashion_mnist_processed_data/train_labels", allow_pickle=True
+    file="data/mnist_processed_data/train_labels", allow_pickle=True
 )
 
 # create an optical image dataset f
@@ -164,7 +164,7 @@ os.chdir(
 )
 
 # make the directory in which to save the metrics and the model
-directory_name = "fashion_mnist_model_5_layers_50_epochs"
+directory_name = "mnist_model_5_layers_50_epochs"
 os.mkdir(directory_name)
 
 save_model_metric(
